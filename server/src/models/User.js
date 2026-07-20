@@ -1,14 +1,8 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
-    employeeId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
     firstName: {
       type: String,
       required: true,
@@ -26,24 +20,23 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      trim: true,
     },
 
     passwordHash: {
       type: String,
       required: true,
+      select: false,
     },
 
     role: {
       type: String,
-      enum: ["Admin", "Manager", "Employee"],
-      default: "Employee",
+      enum: ["admin", "employee"],
+      default: "employee",
     },
 
-    department: {
+    departmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
-      required: true,
     },
 
     designation: {
@@ -51,34 +44,15 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    riskLevel: {
+    profileImage: {
       type: String,
-      enum: ["Low", "Medium", "High", "Critical"],
-      default: "Low",
+      default: "",
     },
 
-    latestRiskScore: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
-
-    trainingCompletion: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
-
-    lastLogin: {
-      type: Date,
-    },
-
-    accountStatus: {
+    status: {
       type: String,
-      enum: ["Active", "Inactive", "Blocked"],
-      default: "Active",
+      enum: ["active", "inactive"],
+      default: "active",
     },
   },
   {
@@ -86,4 +60,20 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("User", userSchema);
+userSchema.pre("save", async function (next) {
+
+    if(!this.isModified("passwordHash"))
+        return next();
+
+    this.passwordHash = await bcrypt.hash(this.passwordHash,10);
+
+    next();
+});
+
+userSchema.methods.comparePassword = async function(password){
+
+    return await bcrypt.compare(password,this.passwordHash);
+
+}
+
+module.exports = mongoose.model("User",userSchema);
