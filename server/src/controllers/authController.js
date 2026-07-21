@@ -118,3 +118,40 @@ exports.getMe = async (req, res, next) => {
   }
 
 };
+
+// ===============================
+// Forgot Password
+// ===============================
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: "Forgot password feature will be implemented later."
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ===============================
+// Reset Password
+// ===============================
+exports.resetPassword = async (req, res, next) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: "Reset password feature will be implemented later."
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.logout = async (req, res) => {
+
+    res.status(200).json({
+        success:true,
+        message:"Logged out successfully"
+    });
+
+}

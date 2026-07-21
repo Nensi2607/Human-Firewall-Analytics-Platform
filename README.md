@@ -97,3 +97,25 @@ Human Firewall Analytics Platform (HFAP) is a cybersecurity awareness platform t
 - Analytics Dashboard
 - Report Generation
 - Notification System
+
+
+## Authentication Flow Diagram
+Register
+      │
+      ▼
+Password Hashing
+      │
+      ▼
+Save User
+      │
+      ▼
+Generate JWT
+      │
+      ▼
+Return Token
+      │
+      ▼
+Frontend Stores Token
+      │
+      ▼
+Protected APIs
