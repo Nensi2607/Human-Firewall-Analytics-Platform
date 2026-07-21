@@ -24,7 +24,9 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use("/api/auth", require("./routes/authRoutes"));
 // Global Error Handler
 app.use(errorHandler);
+app.use("/api/health", require("./routes/healthRoutes"));
 
 module.exports = app;
