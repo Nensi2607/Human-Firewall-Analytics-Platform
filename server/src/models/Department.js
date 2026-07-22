@@ -19,6 +19,17 @@ const departmentSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+
+    totalEmployees: {
+      type: Number,
+      default: 0,
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
   },
   {
     timestamps: true,

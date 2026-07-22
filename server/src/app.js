@@ -27,6 +27,9 @@ app.get("/", (req, res) => {
 app.use("/api/auth", require("./routes/authRoutes"));
 // Global Error Handler
 app.use(errorHandler);
+
 app.use("/api/health", require("./routes/healthRoutes"));
+
+app.use("/api/departments", require("./routes/departmentRoutes"));
 
 module.exports = app;

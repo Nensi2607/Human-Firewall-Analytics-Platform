@@ -5,21 +5,15 @@ const {
   register,
   login,
   getMe,
+  forgotPassword,
+  resetPassword,
+  logout,
 } = require("../controllers/authController");
 
 const { protect } = require("../middleware/authMiddleware");
 const validate = require("../middleware/validationMiddleware");
 
 const router = express.Router();
-
-const {
-  register,
-  login,
-  getMe,
-  forgotPassword,
-  resetPassword,
-  logout,
-} = require("../controllers/authController");
 
 router.post(
   "/register",
@@ -44,9 +38,11 @@ router.post(
 );
 
 router.get("/me", protect, getMe);
+
 router.post("/forgot-password", forgotPassword);
 
 router.post("/reset-password", resetPassword);
+
 router.post("/logout", logout);
 
 module.exports = router;
