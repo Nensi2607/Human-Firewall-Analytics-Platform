@@ -1,43 +1,58 @@
 const jwt = require("jsonwebtoken");
-
 const User = require("../models/User");
 
+// ==========================================
+// Protect Routes
+// ==========================================
 exports.protect = async (req, res, next) => {
+  try {
+    let token;
 
-    try{
-
-        let token;
-
-        if(
-            req.headers.authorization &&
-            req.headers.authorization.startsWith("Bearer")
-        ){
-
-            token = req.headers.authorization.split(" ")[1];
-
-        }
-
-        if(!token){
-
-            return res.status(401).json({
-                success:false,
-                message:"Not authorized"
-            });
-
-        }
-
-        const decoded = jwt.verify(token,process.env.JWT_SECRET);
-
-        req.user = await User.findById(decoded.id);
-
-        next();
-
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
-    catch(error){
-
-        next(error);
-
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized. Token missing.",
+      });
     }
 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = await User.findById(decoded.id).select("-passwordHash");
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "User no longer exists.",
+      });
+    }
+
+    next();
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// Role Authorization
+// ==========================================
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to access this resource.",
+      });
+    }
+
+    next();
+  };
 };

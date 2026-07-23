@@ -8,13 +8,13 @@ const DashboardLayout = ({ children }) => {
       style={{
         display: "flex",
         minHeight: "100vh",
-        background: "#f3f4f6",
+        background: "#f5f7fb",
       }}
     >
       {/* Sidebar */}
       <DashboardSidebar />
 
-      {/* Main Content */}
+      {/* Main Section */}
       <div
         style={{
           flex: 1,
@@ -22,12 +22,15 @@ const DashboardLayout = ({ children }) => {
           flexDirection: "column",
         }}
       >
+        {/* Navbar */}
         <DashboardNavbar />
 
+        {/* Page Content */}
         <main
           style={{
-            padding: "30px",
             flex: 1,
+            padding: "25px",
+            overflowY: "auto",
           }}
         >
           {children}

@@ -32,4 +32,8 @@ app.use("/api/health", require("./routes/healthRoutes"));
 
 app.use("/api/departments", require("./routes/departmentRoutes"));
 
+app.use("/api/users", require("./routes/userRoutes"));
+
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+
 module.exports = app;
