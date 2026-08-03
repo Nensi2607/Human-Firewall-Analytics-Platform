@@ -11,7 +11,6 @@ exports.register = async (req, res, next) => {
       lastName,
       email,
       password,
-      role,
       departmentId,
       designation,
     } = req.body;
@@ -32,7 +31,7 @@ exports.register = async (req, res, next) => {
       lastName,
       email,
       passwordHash: password,
-      role,
+      role: "employee",
       departmentId,
       designation,
     });

@@ -60,14 +60,13 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
 
-    if(!this.isModified("passwordHash"))
-        return next();
+    if (!this.isModified("passwordHash")) {
+        return;
+    }
 
-    this.passwordHash = await bcrypt.hash(this.passwordHash,10);
-
-    next();
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
 });
 
 userSchema.methods.comparePassword = async function(password){
