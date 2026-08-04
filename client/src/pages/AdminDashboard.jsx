@@ -1,77 +1,69 @@
-import React, { useEffect, useState } from "react";
-import DashboardLayout from "../layouts/DashboardLayout";
 import DashboardCard from "../components/DashboardCard";
-
-import {
-  FaUsers,
-  FaBuilding,
-  FaUserShield,
-  FaChartLine,
-} from "react-icons/fa";
-
-import { getAdminDashboard } from "../services/dashboardService";
+import RecentActivities from "../components/dashboard/RecentActivities";
+import QuickActions from "../components/dashboard/QuickActions";
 
 const AdminDashboard = () => {
-  const [dashboard, setDashboard] = useState(null);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      const data = await getAdminDashboard();
-      setDashboard(data.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   return (
-    <DashboardLayout>
-      <h1>Admin Dashboard</h1>
+    <div>
+      <h1>Dashboard</h1>
 
-      {!dashboard ? (
-        <h3>Loading...</h3>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-            gap: "20px",
-            marginTop: "30px",
-          }}
-        >
-          <DashboardCard
-            title="Employees"
-            value={dashboard.totalEmployees}
-            icon={<FaUsers />}
-            color="#2563eb"
-          />
+      <p
+        style={{
+          color: "#6B7280",
+          marginBottom: "30px",
+        }}
+      >
+        Welcome back, Admin 👋
+      </p>
 
-          <DashboardCard
-            title="Departments"
-            value={dashboard.totalDepartments}
-            icon={<FaBuilding />}
-            color="#059669"
-          />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3,1fr)",
+          gap: "20px",
+        }}
+      >
+        <DashboardCard
+          title="Employees"
+          value="250"
+          color="#2563EB"
+        />
 
-          <DashboardCard
-            title="Admins"
-            value={dashboard.totalAdmins}
-            icon={<FaUserShield />}
-            color="#dc2626"
-          />
+        <DashboardCard
+          title="Training Completed"
+          value="180"
+          color="#10B981"
+        />
 
-          <DashboardCard
-            title="Average Risk"
-            value={dashboard.averageRiskScore}
-            icon={<FaChartLine />}
-            color="#d97706"
-          />
-        </div>
-      )}
-    </DashboardLayout>
+        <DashboardCard
+          title="Phishing Campaigns"
+          value="15"
+          color="#F59E0B"
+        />
+
+        <DashboardCard
+          title="Average Risk Score"
+          value="72%"
+          color="#EF4444"
+        />
+
+        <DashboardCard
+          title="Pending Training"
+          value="64"
+          color="#8B5CF6"
+        />
+
+        <DashboardCard
+          title="High Risk Employees"
+          value="12"
+          color="#DC2626"
+        />
+      </div>
+      <RecentActivities />
+      <QuickActions />
+    </div>
+
+    
   );
 };
 

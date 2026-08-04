@@ -1,20 +1,20 @@
-import React from "react";
-import DashboardSidebar from "../components/DashboardSidebar";
-import DashboardNavbar from "../components/DashboardNavbar";
+import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+import { Outlet } from "react-router-dom";
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = () => {
   return (
     <div
       style={{
         display: "flex",
         minHeight: "100vh",
-        background: "#f5f7fb",
+        background: "#F3F4F6",
       }}
     >
       {/* Sidebar */}
-      <DashboardSidebar />
+      <Sidebar />
 
-      {/* Main Section */}
+      {/* Main Content */}
       <div
         style={{
           flex: 1,
@@ -23,17 +23,17 @@ const DashboardLayout = ({ children }) => {
         }}
       >
         {/* Navbar */}
-        <DashboardNavbar />
+        <Navbar />
 
         {/* Page Content */}
         <main
           style={{
             flex: 1,
-            padding: "25px",
+            padding: "30px",
             overflowY: "auto",
           }}
         >
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
