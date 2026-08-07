@@ -24,16 +24,15 @@ app.get("/", (req, res) => {
   });
 });
 
+// API Routes
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/health", require("./routes/healthRoutes"));
+app.use("/api/departments", require("./routes/departmentRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+app.use("/api/analytics", require("./routes/analyticsRoutes"));
+
 // Global Error Handler
 app.use(errorHandler);
-
-app.use("/api/health", require("./routes/healthRoutes"));
-
-app.use("/api/departments", require("./routes/departmentRoutes"));
-
-app.use("/api/users", require("./routes/userRoutes"));
-
-app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 
 module.exports = app;
