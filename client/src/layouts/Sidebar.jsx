@@ -28,12 +28,12 @@ const menuItems = [
   },
   {
     name: "Training",
-    path: "#",
+    path: "/training",
     icon: GraduationCap,
   },
   {
     name: "Analytics",
-    path: "#",
+    path: "/analytics",
     icon: BarChart3,
   },
   {

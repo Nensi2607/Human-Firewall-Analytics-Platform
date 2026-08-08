@@ -10,6 +10,9 @@ import AdminDashboard from "../pages/AdminDashboard";
 import EmployeeDashboard from "../pages/EmployeeDashboard";
 import AnalyticsDashboard from "../pages/AnalyticsDashboard";
 
+import Quiz from "../pages/Quiz";
+import Training from "../pages/Training";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -20,9 +23,14 @@ const AppRoutes = () => {
       {/* Registration Page */}
       <Route path="/register" element={<Register />} />
 
+      {/* Quiz and Training */}
+      <Route path="/quiz" element={<Quiz />} />
+      <Route path="/quiz/:quizId" element={<Quiz />} />
+      <Route path="/training" element={<Training />} />
+
       {/* Dashboard Layout */}
       <Route element={<DashboardLayout />}>
-        {/* ORIGINAL DASHBOARD */}
+        {/* Original Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Role Based Dashboards */}
