@@ -1,113 +1,113 @@
 import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  ShieldAlert,
+  GraduationCap,
+  BarChart3,
+  FileText,
+  Settings,
+  LogOut,
+} from "lucide-react";
+
+const menuItems = [
+  {
+    name: "Dashboard",
+    path: "/admin",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Employees",
+    path: "/employee",
+    icon: Users,
+  },
+  {
+    name: "Phishing",
+    path: "#",
+    icon: ShieldAlert,
+  },
+  {
+    name: "Training",
+    path: "#",
+    icon: GraduationCap,
+  },
+  {
+    name: "Analytics",
+    path: "#",
+    icon: BarChart3,
+  },
+  {
+    name: "Reports",
+    path: "#",
+    icon: FileText,
+  },
+  {
+    name: "Settings",
+    path: "#",
+    icon: Settings,
+  },
+];
 
 const Sidebar = () => {
   return (
-    <aside
-      style={{
-        width: "250px",
-        height: "100vh",
-        background: "#1F2937",
-        color: "#fff",
-        display: "flex",
-        flexDirection: "column",
-        padding: "20px",
-      }}
-    >
+    <aside className="w-72 min-h-screen bg-slate-900 text-white flex flex-col shadow-xl">
+
       {/* Logo */}
-      <div
-        style={{
-          fontSize: "24px",
-          fontWeight: "bold",
-          marginBottom: "40px",
-          textAlign: "center",
-        }}
-      >
-        HFAP
+
+      <div className="px-6 py-8 border-b border-slate-800">
+
+        <h1 className="text-3xl font-bold text-blue-500">
+          HFAP
+        </h1>
+
+        <p className="text-sm text-slate-400 mt-1">
+          Human Firewall
+        </p>
+
       </div>
 
       {/* Navigation */}
-      <nav style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        <NavLink
-          to="/dashboard"
-          style={({ isActive }) => ({
-            color: isActive ? "#38BDF8" : "#fff",
-            textDecoration: "none",
-            fontSize: "18px",
-          })}
-        >
-          Dashboard
-        </NavLink>
 
-        <NavLink
-          to="/employees"
-          style={({ isActive }) => ({
-            color: isActive ? "#38BDF8" : "#fff",
-            textDecoration: "none",
-            fontSize: "18px",
-          })}
-        >
-          Employees
-        </NavLink>
+      <nav className="flex-1 mt-6 px-3">
 
-        <NavLink
-          to="/phishing"
-          style={({ isActive }) => ({
-            color: isActive ? "#38BDF8" : "#fff",
-            textDecoration: "none",
-            fontSize: "18px",
-          })}
-        >
-          Phishing
-        </NavLink>
+        {menuItems.map((item) => {
 
-        <NavLink
-          to="/training"
-          style={({ isActive }) => ({
-            color: isActive ? "#38BDF8" : "#fff",
-            textDecoration: "none",
-            fontSize: "18px",
-          })}
-        >
-          Training
-        </NavLink>
+          const Icon = item.icon;
 
-        <NavLink
-          to="/reports"
-          style={({ isActive }) => ({
-            color: isActive ? "#38BDF8" : "#fff",
-            textDecoration: "none",
-            fontSize: "18px",
-          })}
-        >
-          Reports
-        </NavLink>
+          return (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl mb-2 transition-all duration-200
+                ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`
+              }
+            >
+              <Icon size={20} />
 
-        <NavLink
-          to="/settings"
-          style={({ isActive }) => ({
-            color: isActive ? "#38BDF8" : "#fff",
-            textDecoration: "none",
-            fontSize: "18px",
-          })}
-        >
-          Settings
-        </NavLink>
+              <span>{item.name}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Logout */}
-      <button
-        style={{
-          marginTop: "auto",
-          padding: "10px",
-          background: "#EF4444",
-          color: "#fff",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
-      >
-        Logout
-      </button>
+
+      <div className="p-5 border-t border-slate-800">
+
+        <button
+          className="flex items-center justify-center gap-2 w-full bg-red-500 hover:bg-red-600 transition rounded-xl py-3 font-semibold"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+
+      </div>
+
     </aside>
   );
 };
