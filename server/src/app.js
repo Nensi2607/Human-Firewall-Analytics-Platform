@@ -25,8 +25,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", require("./routes/authRoutes"));
-// Global Error Handler
-app.use(errorHandler);
+
 
 app.use("/api/health", require("./routes/healthRoutes"));
 
@@ -35,5 +34,12 @@ app.use("/api/departments", require("./routes/departmentRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+
+app.use("/api/quizzes", require("./routes/quizRoutes"));
+
+app.use("/api/questions", require("./routes/questionRoutes"));
+
+// Global Error Handler
+app.use(errorHandler);
 
 module.exports = app;
