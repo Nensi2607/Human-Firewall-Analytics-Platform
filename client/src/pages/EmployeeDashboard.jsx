@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import DashboardCard from "../components/DashboardCard";
 
@@ -14,10 +14,6 @@ import { getEmployeeDashboard } from "../services/dashboardService";
 const EmployeeDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
   const loadDashboard = async () => {
     try {
       const data = await getEmployeeDashboard();
@@ -26,6 +22,10 @@ const EmployeeDashboard = () => {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
   return (
     <DashboardLayout>
