@@ -1,6 +1,31 @@
 const User = require("../models/User");
 
 // ==========================================
+// Get Current Logged-in User Profile
+// ==========================================
+exports.getCurrentUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select("-passwordHash")
+      .populate("departmentId", "departmentName");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ==========================================
 // Get All Users
 // ==========================================
 exports.getUsers = async (req, res, next) => {

@@ -1,30 +1,26 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Users,
-  ShieldAlert,
-  GraduationCap,
   BarChart3,
+  Bell,
   FileText,
-  Settings,
+  GraduationCap,
+  LayoutDashboard,
   LogOut,
+  ShieldAlert,
+  Sparkles,
+  Target,
 } from "lucide-react";
 
 const menuItems = [
   {
     name: "Dashboard",
-    path: "/admin",
+    path: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    name: "Employees",
-    path: "/employee",
-    icon: Users,
-  },
-  {
-    name: "Phishing",
-    path: "#",
-    icon: ShieldAlert,
+    name: "Quiz",
+    path: "/quiz",
+    icon: Target,
   },
   {
     name: "Training",
@@ -32,46 +28,55 @@ const menuItems = [
     icon: GraduationCap,
   },
   {
+    name: "Phishing",
+    path: "/phishing",
+    icon: ShieldAlert,
+  },
+  {
+    name: "Risk",
+    path: "/risk",
+    icon: Sparkles,
+  },
+  {
     name: "Analytics",
     path: "/analytics",
     icon: BarChart3,
   },
   {
-    name: "Reports",
-    path: "#",
+    name: "Recommendations",
+    path: "/recommendations",
     icon: FileText,
   },
   {
-    name: "Settings",
-    path: "#",
-    icon: Settings,
+    name: "Notifications",
+    path: "/notifications",
+    icon: Bell,
+  },
+  {
+    name: "Reports",
+    path: "/reports",
+    icon: FileText,
   },
 ];
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   return (
-    <aside className="w-72 min-h-screen bg-slate-900 text-white flex flex-col shadow-xl">
-
-      {/* Logo */}
-
-      <div className="px-6 py-8 border-b border-slate-800">
-
-        <h1 className="text-3xl font-bold text-blue-500">
-          HFAP
-        </h1>
-
-        <p className="text-sm text-slate-400 mt-1">
-          Human Firewall
-        </p>
-
+    <aside className="flex min-h-screen w-72 flex-col bg-slate-900 text-white shadow-xl">
+      <div className="border-b border-slate-800 px-6 py-8">
+        <h1 className="text-3xl font-bold text-blue-500">HFAP</h1>
+        <p className="mt-1 text-sm text-slate-400">Human Firewall</p>
       </div>
 
-      {/* Navigation */}
-
-      <nav className="flex-1 mt-6 px-3">
-
+      <nav className="mt-6 flex-1 px-3">
         {menuItems.map((item) => {
-
           const Icon = item.icon;
 
           return (
@@ -79,8 +84,7 @@ const Sidebar = () => {
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl mb-2 transition-all duration-200
-                ${
+                `mb-2 flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
                   isActive
                     ? "bg-blue-600 text-white"
                     : "text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -88,26 +92,22 @@ const Sidebar = () => {
               }
             >
               <Icon size={20} />
-
               <span>{item.name}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      {/* Logout */}
-
-      <div className="p-5 border-t border-slate-800">
-
+      <div className="border-t border-slate-800 p-5">
         <button
-          className="flex items-center justify-center gap-2 w-full bg-red-500 hover:bg-red-600 transition rounded-xl py-3 font-semibold"
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-3 font-semibold transition hover:bg-red-600"
         >
           <LogOut size={18} />
           Logout
         </button>
-
       </div>
-
     </aside>
   );
 };

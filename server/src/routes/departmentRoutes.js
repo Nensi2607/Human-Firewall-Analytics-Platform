@@ -11,11 +11,8 @@ const {
 
 const {
   protect,
-} = require("../middleware/authMiddleware");
-
-const {
   authorize,
-} = require("../middleware/roleMiddleware");
+} = require("../middleware/authMiddleware");
 
 const router = express.Router();
 

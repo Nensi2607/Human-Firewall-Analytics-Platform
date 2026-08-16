@@ -1,6 +1,7 @@
 const express = require("express");
 
 const {
+  getCurrentUserProfile,
   getUsers,
   getUser,
   updateUser,
@@ -11,11 +12,12 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Only Admin can manage users
+router.get("/me", protect, getCurrentUserProfile);
 
-router.get("/", protect, authorize("admin"), getUsers);
+// Shared list for authenticated users; mutations remain admin-only.
+router.get("/", protect, getUsers);
 
-router.get("/:id", protect, authorize("admin"), getUser);
+router.get("/:id", protect, getUser);
 
 router.put("/:id", protect, authorize("admin"), updateUser);
 
