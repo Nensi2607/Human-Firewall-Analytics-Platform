@@ -156,8 +156,9 @@ function Quiz() {
 
     questions.forEach((question, index) => {
       const selectedAnswer = answers[index];
+       const correctAnswer = question.options[question.answer];
 
-      if (selectedAnswer === question.correctAnswer) {
+      if (selectedAnswer === correctAnswer) {
         score++;
       }
     });
