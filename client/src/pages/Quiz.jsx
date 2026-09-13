@@ -15,6 +15,23 @@ const calculateQuizScore = (questions, answers) => {
   }, 0);
 };
 
+const areValidQuizQuestions = (questions) => {
+  return (
+    Array.isArray(questions) &&
+    questions.length > 0 &&
+    questions.every(
+      (question) =>
+        typeof question?.question === "string" &&
+        question.question.trim().length > 0 &&
+        Array.isArray(question.options) &&
+        question.options.length > 0 &&
+        Number.isInteger(question.answer) &&
+        question.answer >= 0 &&
+        question.answer < question.options.length
+    )
+  );
+};
+
 function Quiz() {
   const { quizId } = useParams();
 
@@ -47,10 +64,14 @@ function Quiz() {
 
         console.log("Questions received:", data);
 
-        if (Array.isArray(data) && data.length > 0) {
+        if (areValidQuizQuestions(data)) {
           setQuestions(data);
         } else {
-          setError("No questions found for this quiz.");
+          setError(
+            Array.isArray(data) && data.length === 0
+              ? "No questions found for this quiz."
+              : "Quiz questions could not be loaded correctly."
+          );
         }
       } catch (err) {
         console.error("Quiz loading error:", err);
