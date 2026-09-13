@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getQuizQuestions } from "../services/quizService";
+import {
+  getQuizQuestions,
+  submitQuizResult,
+} from "../services/quizService";
 import quizData from "../data/quizData";
+
+const calculateQuizScore = (questions, answers) => {
+  return questions.reduce((score, question, index) => {
+    const selectedAnswer = answers[index];
+    const correctAnswer = question.options[question.answer];
+
+    return score + (selectedAnswer === correctAnswer ? 1 : 0);
+  }, 0);
+};
 
 function Quiz() {
   const { quizId } = useParams();
@@ -12,6 +24,9 @@ function Quiz() {
   const [result, setResult] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [submissionError, setSubmissionError] = useState("");
+  const [submittedResult, setSubmittedResult] = useState(null);
+  const [submissionAttempt, setSubmissionAttempt] = useState(0);
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -78,7 +93,53 @@ function Quiz() {
     setCurrent(0);
     setAnswers({});
     setResult(false);
+    setSubmissionError("");
+    setSubmittedResult(null);
+    setSubmissionAttempt(0);
   };
+
+  useEffect(() => {
+    if (!result || questions.length === 0 || submittedResult) {
+      return;
+    }
+
+    const score = calculateQuizScore(questions, answers);
+    const percentage = Math.round((score / questions.length) * 100);
+    let isActive = true;
+
+    const saveResult = async () => {
+      setSubmissionError("");
+
+      try {
+        await submitQuizResult({
+          quizId: quizId || null,
+          score,
+          totalQuestions: questions.length,
+          correctAnswers: score,
+          percentage,
+        });
+
+        if (isActive) {
+          setSubmittedResult({ score, percentage });
+        }
+      } catch (err) {
+        if (isActive) {
+          const status = err.response?.status;
+          setSubmissionError(
+            status === 401 || status === 403
+              ? "You are not authorized to save this quiz result."
+              : "Unable to save your quiz result. Please try again."
+          );
+        }
+      }
+    };
+
+    saveResult();
+
+    return () => {
+      isActive = false;
+    };
+  }, [answers, questions, quizId, result, submissionAttempt, submittedResult]);
 
   // Loading
   if (loading) {
@@ -152,16 +213,8 @@ function Quiz() {
 
   // Calculate result
   if (result) {
-    let score = 0;
-
-    questions.forEach((question, index) => {
-      const selectedAnswer = answers[index];
-       const correctAnswer = question.options[question.answer];
-
-      if (selectedAnswer === correctAnswer) {
-        score++;
-      }
-    });
+    const score =
+      submittedResult?.score ?? calculateQuizScore(questions, answers);
 
     const percentage = Math.round(
       (score / questions.length) * 100
@@ -180,6 +233,13 @@ function Quiz() {
         : percentage >= 50
         ? "#F59E0B"
         : "#DC2626";
+
+    const securityMessage =
+      percentage >= 80
+        ? "Great job! You demonstrated strong security awareness."
+        : percentage >= 50
+        ? "Good effort. Review the training material to strengthen your security awareness."
+        : "Some areas need improvement. Review the training material and try again.";
 
     return (
       <div
@@ -205,11 +265,39 @@ function Quiz() {
           {risk}
         </h2>
 
+        <p style={{ marginTop: "15px", color: "#555" }}>
+          {securityMessage}
+        </p>
+
         <p>✅ Correct Answers: {score}</p>
 
         <p>
           ❌ Wrong Answers: {questions.length - score}
         </p>
+
+        {submissionError ? (
+          <div style={{ marginTop: "20px", color: "#DC2626" }}>
+            <p>{submissionError}</p>
+            <button
+              onClick={() => setSubmissionAttempt((attempt) => attempt + 1)}
+              style={{
+                marginTop: "12px",
+                padding: "10px 20px",
+                background: "#2563EB",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        ) : !submittedResult ? (
+          <p style={{ marginTop: "20px", color: "#6B7280" }}>
+            Saving your result...
+          </p>
+        ) : null}
 
         <button
           onClick={restartQuiz}
