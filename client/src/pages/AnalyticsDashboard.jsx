@@ -108,28 +108,28 @@ function AnalyticsDashboard() {
       <div className="analytics-stats-grid">
         <StatisticsCard
           title="Total Employees"
-          value={overview.totalEmployees ?? 0}
+          value={overview.totalEmployees ?? "N/A"}
           subtitle="Registered employees"
           icon="users"
         />
 
         <StatisticsCard
           title="High Risk"
-          value={overview.highRisk ?? 0}
+          value={overview.highRisk ?? "N/A"}
           subtitle="Requires immediate attention"
           icon="high-risk"
         />
 
         <StatisticsCard
           title="Medium Risk"
-          value={overview.mediumRisk ?? 0}
+          value={overview.mediumRisk ?? "N/A"}
           subtitle="Requires monitoring"
           icon="medium-risk"
         />
 
         <StatisticsCard
           title="Low Risk"
-          value={overview.lowRisk ?? 0}
+          value={overview.lowRisk ?? "N/A"}
           subtitle="Currently low risk"
           icon="low-risk"
         />
@@ -139,7 +139,7 @@ function AnalyticsDashboard() {
           value={
             overview.averageRiskScore != null
               ? `${overview.averageRiskScore}%`
-              : "0%"
+              : "N/A"
           }
           subtitle="Overall employee risk"
           icon="score"
@@ -150,7 +150,7 @@ function AnalyticsDashboard() {
           value={
             overview.phishingFailureRate != null
               ? `${overview.phishingFailureRate}%`
-              : "0%"
+              : "N/A"
           }
           subtitle="Simulation performance"
           icon="phishing"

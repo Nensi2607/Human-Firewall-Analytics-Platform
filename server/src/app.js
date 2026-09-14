@@ -30,6 +30,14 @@ app.use("/api/health", require("./routes/healthRoutes"));
 app.use("/api/departments", require("./routes/departmentRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+app.use("/api/quiz-results", require("./routes/quizResultRoutes"));
+app.use("/api/training", require("./routes/trainingRoutes"));
+app.use("/api/training-progress", require("./routes/trainingProgressRoutes"));
+app.use(
+  "/api/phishing-awareness",
+  require("./routes/phishingAwarenessRoutes")
+);
+app.use("/api/risk-assessment", require("./routes/riskAssessmentRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
 
 // Global Error Handler

@@ -13,6 +13,8 @@ const riskAssessmentSchema = new mongoose.Schema({
 
   trainingScore: Number,
 
+  securityAwarenessScore: Number,
+
   passwordScore: Number,
 
   finalRiskScore: Number,
@@ -25,5 +27,10 @@ const riskAssessmentSchema = new mongoose.Schema({
   assessedAt: Date
 
 }, { timestamps: true });
+
+riskAssessmentSchema.index(
+  { userId: 1 },
+  { unique: true }
+);
 
 module.exports = mongoose.model("RiskAssessment", riskAssessmentSchema);
