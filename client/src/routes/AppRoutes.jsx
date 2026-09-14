@@ -12,6 +12,7 @@ import PlaceholderPage from "../pages/PlaceholderPage";
 
 import Quiz from "../pages/Quiz";
 import Training from "../pages/Training";
+import Phishing from "../pages/Phishing";
 
 const getStoredUser = () => {
   try {
@@ -53,12 +54,7 @@ const AppRoutes = () => {
           
           <Route
             path="/phishing"
-            element={
-              <PlaceholderPage
-                title="Phishing"
-                description="Review upcoming phishing simulations, campaign history, and employee targeting insights."
-              />
-            }
+            element={<Phishing />}
           />
           <Route
             path="/risk"

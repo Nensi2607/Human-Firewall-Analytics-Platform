@@ -10,18 +10,16 @@ const User = getModel("User");
 const RiskAssessment =
   getModel("RiskAssessment");
 
-const PhishingAttempt =
-  getModel("PhishingAttempt");
 
 async function getOverview() {
   const totalEmployees = User
-    ? await User.countDocuments()
+    ? await User.countDocuments({ role: "employee" })
     : 0;
 
   let highRisk = 0;
   let mediumRisk = 0;
   let lowRisk = 0;
-  let averageRiskScore = 0;
+  let averageRiskScore = null;
 
   if (RiskAssessment) {
     const riskData =
@@ -31,7 +29,7 @@ async function getOverview() {
             _id: null,
 
             averageRiskScore: {
-              $avg: "$riskScore",
+              $avg: "$finalRiskScore",
             },
 
             highRisk: {
@@ -100,66 +98,10 @@ async function getOverview() {
       lowRisk =
         riskData[0].lowRisk || 0;
 
-      averageRiskScore = Math.round(
-        riskData[0].averageRiskScore || 0
-      );
-    }
-  }
-
-  let phishingFailureRate = 0;
-
-  if (PhishingAttempt) {
-    const phishingData =
-      await PhishingAttempt.aggregate([
-        {
-          $group: {
-            _id: null,
-
-            total: {
-              $sum: 1,
-            },
-
-            failed: {
-              $sum: {
-                $cond: [
-                  {
-                    $or: [
-                      {
-                        $eq: [
-                          "$status",
-                          "failed",
-                        ],
-                      },
-                      {
-                        $eq: [
-                          "$result",
-                          "failed",
-                        ],
-                      },
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-          },
-        },
-      ]);
-
-    if (phishingData.length > 0) {
-      const total =
-        phishingData[0].total || 0;
-
-      const failed =
-        phishingData[0].failed || 0;
-
-      phishingFailureRate =
-        total > 0
-          ? Math.round(
-              (failed / total) * 100
-            )
-          : 0;
+      averageRiskScore =
+        typeof riskData[0].averageRiskScore === "number"
+          ? Math.round(riskData[0].averageRiskScore)
+          : null;
     }
   }
 
@@ -169,7 +111,7 @@ async function getOverview() {
     mediumRisk,
     lowRisk,
     averageRiskScore,
-    phishingFailureRate,
+    phishingFailureRate: null,
   };
 }
 
@@ -204,11 +146,35 @@ async function getDepartmentRisk() {
 
   return RiskAssessment.aggregate([
     {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.role": "employee" } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $group: {
-        _id: "$department",
+        _id: "$department.departmentName",
 
         averageRisk: {
-          $avg: "$riskScore",
+          $avg: "$finalRiskScore",
         },
 
         employeeCount: {
@@ -249,31 +215,50 @@ async function getEmployeeRisk() {
   return RiskAssessment.aggregate([
     {
       $sort: {
-        riskScore: -1,
+        finalRiskScore: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.role": "employee" } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
       },
     },
 
     {
       $project: {
-        _id: 1,
-
-        name: 1,
-
-        employeeName: 1,
-
-        employeeId: 1,
-
-        department: 1,
-
-        riskScore: 1,
-
+        _id: 0,
+        employeeId: "$user._id",
+        employeeName: {
+          $trim: {
+            input: {
+              $concat: ["$user.firstName", " ", "$user.lastName"],
+            },
+          },
+        },
+        department: "$department.departmentName",
+        finalRiskScore: 1,
         riskLevel: 1,
-
         lastAssessment: {
-          $ifNull: [
-            "$updatedAt",
-            "$createdAt",
-          ],
+          $ifNull: ["$assessedAt", "$updatedAt"],
         },
       },
     },

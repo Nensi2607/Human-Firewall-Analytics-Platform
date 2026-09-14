@@ -10,6 +10,7 @@ const models = [
   require("../models/TrainingProgress"),
   require("../models/PhishingCampaign"),
   require("../models/PhishingAttempt"),
+  require("../models/PhishingAwarenessResult"),
   require("../models/RiskAssessment"),
   require("../models/AIPrediction"),
   require("../models/Recommendation"),

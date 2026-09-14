@@ -7,13 +7,8 @@ function EmployeeRiskTable({ employees = [] }) {
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
-      const name =
-        employee.name ||
-        employee.employeeName ||
-        "";
-
-      const department =
-        employee.department || "";
+      const name = employee.employeeName || "";
+      const department = employee.department || "";
 
       const riskLevel =
         employee.riskLevel || "Unknown";
@@ -116,19 +111,9 @@ function EmployeeRiskTable({ employees = [] }) {
             {filteredEmployees.length > 0 ? (
               filteredEmployees.map(
                 (employee, index) => {
-                  const name =
-                    employee.name ||
-                    employee.employeeName ||
-                    "Unknown";
-
-                  const department =
-                    employee.department ||
-                    "N/A";
-
-                  const score =
-                    employee.riskScore ??
-                    employee.score ??
-                    0;
+                  const name = employee.employeeName || "N/A";
+                  const department = employee.department || "N/A";
+                  const score = employee.finalRiskScore ?? "N/A";
 
                   const riskLevel =
                     employee.riskLevel ||

@@ -18,21 +18,11 @@ ChartJS.register(
 );
 
 function DepartmentRiskChart({ data = [] }) {
-  const labels = data.map(
-    (item) =>
-      item.department ||
-      item.name ||
-      "Unknown"
-  );
+  const labels = data.map((item) => item.department || "N/A");
 
   const values = data.map(
     (item) =>
-      Number(
-        item.averageRisk ??
-        item.riskScore ??
-        item.score ??
-        0
-      )
+      item.averageRisk == null ? 0 : Number(item.averageRisk)
   );
 
   const chartData = {
