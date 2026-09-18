@@ -34,11 +34,12 @@ exports.updateTrainingProgress = async (req, res, next) => {
 			!Number.isFinite(progress) ||
 			progress < 0 ||
 			progress > 100 ||
-			typeof completed !== "boolean"
+			typeof completed !== "boolean" ||
+			(completed && progress !== 100)
 		) {
 			return res.status(400).json({
 				success: false,
-				message: "Progress must be between 0 and 100, and completed must be boolean.",
+				message: "Progress must be between 0 and 100, and completed requires 100% progress.",
 			});
 		}
 
@@ -51,7 +52,7 @@ exports.updateTrainingProgress = async (req, res, next) => {
 			});
 		}
 
-		const isCompleted = completed || progress === 100;
+		const isCompleted = completed;
 		const savedProgress = await TrainingProgress.findOneAndUpdate(
 			{
 				userId: req.user._id,

@@ -21,6 +21,12 @@ Human Firewall Analytics Platform (HFAP) is a cybersecurity awareness platform t
 
 ---
 
+## Known Limitations / Placeholders
+
+- The Human Risk Score weighting and formula are currently placeholders for prototyping purposes. The final weighting and formula are a team decision and have not yet been finalized.
+
+---
+
 ## Tech Stack
 
 - Node.js

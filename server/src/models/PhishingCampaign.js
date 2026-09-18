@@ -2,11 +2,22 @@ const mongoose = require("mongoose");
 
 const phishingCampaignSchema = new mongoose.Schema({
 
-  title: String,
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+  },
 
-  emailSubject: String,
+  emailSubject: {
+    type: String,
+    required: true,
+    trim: true,
+  },
 
-  emailTemplate: String,
+  emailTemplate: {
+    type: String,
+    required: true,
+  },
 
   targetDepartments: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -31,7 +42,8 @@ const phishingCampaignSchema = new mongoose.Schema({
       "running",
       "completed",
       "cancelled"
-    ]
+    ],
+    default: "draft",
   },
 
   launchDate: Date,

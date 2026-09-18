@@ -11,7 +11,7 @@ router.get("/", protect, authorize("employee", "admin"), getTrainingProgress);
 router.post(
 	"/:trainingId",
 	protect,
-	authorize("employee", "admin"),
+	authorize("employee"),
 	updateTrainingProgress
 );
 

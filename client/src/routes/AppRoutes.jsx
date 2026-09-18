@@ -13,6 +13,7 @@ import PlaceholderPage from "../pages/PlaceholderPage";
 import Quiz from "../pages/Quiz";
 import Training from "../pages/Training";
 import Phishing from "../pages/Phishing";
+import PhishingAwarenessLanding from "../pages/PhishingAwarenessLanding";
 
 const getStoredUser = () => {
   try {
@@ -35,6 +36,7 @@ const PublicRoute = () => {
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route path="/phishing-awareness" element={<PhishingAwarenessLanding />} />
       <Route element={<PublicRoute />}>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />

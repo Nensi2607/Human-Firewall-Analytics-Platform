@@ -6,15 +6,6 @@ import {
 } from "../services/quizService";
 import quizData from "../data/quizData";
 
-const calculateQuizScore = (questions, answers) => {
-  return questions.reduce((score, question, index) => {
-    const selectedAnswer = answers[index];
-    const correctAnswer = question.options[question.answer];
-
-    return score + (selectedAnswer === correctAnswer ? 1 : 0);
-  }, 0);
-};
-
 const areValidQuizQuestions = (questions) => {
   return (
     Array.isArray(questions) &&
@@ -25,9 +16,7 @@ const areValidQuizQuestions = (questions) => {
         question.question.trim().length > 0 &&
         Array.isArray(question.options) &&
         question.options.length > 0 &&
-        Number.isInteger(question.answer) &&
-        question.answer >= 0 &&
-        question.answer < question.options.length
+        question.options.every((option) => typeof option === "string")
     )
   );
 };
@@ -124,24 +113,26 @@ function Quiz() {
       return;
     }
 
-    const score = calculateQuizScore(questions, answers);
-    const percentage = Math.round((score / questions.length) * 100);
     let isActive = true;
 
     const saveResult = async () => {
       setSubmissionError("");
 
+      if (!quizId || quizId === "sample") {
+        setSubmissionError(
+          "This local sample quiz cannot be saved. Open an assigned quiz to submit a result."
+        );
+        return;
+      }
+
       try {
-        await submitQuizResult({
-          quizId: quizId || null,
-          score,
-          totalQuestions: questions.length,
-          correctAnswers: score,
-          percentage,
+        const response = await submitQuizResult({
+          quizId,
+          answers: questions.map((_, index) => answers[index]),
         });
 
         if (isActive) {
-          setSubmittedResult({ score, percentage });
+          setSubmittedResult(response.data);
         }
       } catch (err) {
         if (isActive) {
@@ -234,12 +225,8 @@ function Quiz() {
 
   // Calculate result
   if (result) {
-    const score =
-      submittedResult?.score ?? calculateQuizScore(questions, answers);
-
-    const percentage = Math.round(
-      (score / questions.length) * 100
-    );
+    const score = submittedResult?.score ?? 0;
+    const percentage = submittedResult?.percentage ?? 0;
 
     const risk =
       percentage >= 80

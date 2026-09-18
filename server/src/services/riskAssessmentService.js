@@ -3,9 +3,15 @@ const Training = require("../models/Training");
 const TrainingProgress = require("../models/TrainingProgress");
 const QuizResult = require("../models/QuizResult");
 const PhishingAwarenessResult = require("../models/PhishingAwarenessResult");
+const PhishingAttempt = require("../models/PhishingAttempt");
 
+/*
+ * Prototype weighting only: the current risk-score weighting and formula are
+ * placeholders for prototyping. The final weighting and formula are a team
+ * decision and have not yet been finalized.
+ */
 const calculateRiskAssessment = async (userId) => {
-  const [trainingRecords, latestQuiz, phishingResult] = await Promise.all([
+  const [trainingRecords, latestQuiz, phishingResult, latestPhishingAttempt] = await Promise.all([
       Training.find().select("_id").lean(),
       QuizResult.findOne({ userId })
         .select(
@@ -15,6 +21,10 @@ const calculateRiskAssessment = async (userId) => {
         .lean(),
       PhishingAwarenessResult.findOne({ userId })
         .select("score correctAnswers totalScenarios completedAt")
+        .lean(),
+      PhishingAttempt.findOne({ userId })
+        .select("clicked sentAt")
+        .sort({ sentAt: -1 })
         .lean(),
     ]);
   const availableTrainingIds = trainingRecords.map((training) => training._id);
@@ -54,13 +64,26 @@ const calculateRiskAssessment = async (userId) => {
     }
   }
 
+  const phishingScores = [];
+
   if (
     phishingResult &&
     typeof phishingResult.score === "number" &&
     Number.isFinite(phishingResult.score)
   ) {
+    phishingScores.push(phishingResult.score);
+  }
+
+  if (latestPhishingAttempt) {
+    phishingScores.push(latestPhishingAttempt.clicked ? 0 : 100);
+  }
+
+  if (phishingScores.length > 0) {
     components.push({
-      score: Math.min(Math.max(phishingResult.score, 0), 100),
+      score: Math.round(
+        phishingScores.reduce((total, score) => total + score, 0) /
+          phishingScores.length
+      ),
       weight: 0.25,
     });
   }
