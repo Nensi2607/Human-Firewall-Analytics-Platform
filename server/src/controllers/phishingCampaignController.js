@@ -98,6 +98,45 @@ exports.createCampaign = async (req, res, next) => {
 	}
 };
 
+exports.getCampaigns = async (req, res, next) => {
+	try {
+		const campaigns = await PhishingCampaign.find()
+			.select("title emailSubject status launchDate createdAt")
+			.sort({ createdAt: -1 })
+			.lean();
+
+		const campaignIds = campaigns.map((campaign) => campaign._id);
+		const stats = await PhishingAttempt.aggregate([
+			{ $match: { campaignId: { $in: campaignIds } } },
+			{
+				$group: {
+					_id: "$campaignId",
+					targetedCount: { $sum: 1 },
+					clickedCount: { $sum: { $cond: ["$clicked", 1, 0] } },
+				},
+			},
+		]);
+		const statsByCampaign = new Map(stats.map((stat) => [String(stat._id), stat]));
+
+		res.status(200).json({
+			success: true,
+			data: campaigns.map((campaign) => {
+				const stat = statsByCampaign.get(String(campaign._id));
+				const targetedCount = stat?.targetedCount || 0;
+				const clickedCount = stat?.clickedCount || 0;
+				return {
+					...campaign,
+					targetedCount,
+					clickedCount,
+					clickRate: targetedCount ? Math.round((clickedCount / targetedCount) * 100) : 0,
+				};
+			})
+		});
+	} catch (err) {
+		next(err);
+	}
+};
+
 exports.launchCampaign = async (req, res, next) => {
 	try {
 		const campaign = await PhishingCampaign.findById(req.params.id);

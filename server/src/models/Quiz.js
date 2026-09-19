@@ -17,6 +17,21 @@ const quizSchema = new mongoose.Schema({
 
   duration: Number,
 
+  targetDepartments: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department",
+  }],
+
+  targetUsers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  }],
+
+  targetAll: {
+    type: Boolean,
+    default: false,
+  },
+
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

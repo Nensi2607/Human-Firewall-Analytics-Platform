@@ -14,6 +14,8 @@ import Quiz from "../pages/Quiz";
 import Training from "../pages/Training";
 import Phishing from "../pages/Phishing";
 import PhishingAwarenessLanding from "../pages/PhishingAwarenessLanding";
+import AdminQuizManagement from "../pages/AdminQuizManagement";
+import AdminPhishingCampaigns from "../pages/AdminPhishingCampaigns";
 
 const getStoredUser = () => {
   try {
@@ -67,12 +69,7 @@ const AppRoutes = () => {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route
               path="/admin/quizzes"
-              element={
-                <PlaceholderPage
-                  title="Quiz Management"
-                  description="Create quizzes and questions, then assign them to employees or departments."
-                />
-              }
+              element={<AdminQuizManagement />}
             />
             <Route
               path="/admin/training"
@@ -85,12 +82,7 @@ const AppRoutes = () => {
             />
             <Route
               path="/admin/phishing"
-              element={
-                <PlaceholderPage
-                  title="Phishing Campaigns"
-                  description="Create and launch simulations, then review campaign-level and employee-level results."
-                />
-              }
+              element={<AdminPhishingCampaigns />}
             />
             <Route path="/analytics" element={<AnalyticsDashboard />} />
             <Route
