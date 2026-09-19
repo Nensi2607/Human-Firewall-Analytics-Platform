@@ -2,6 +2,8 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Bell,
+  Building2,
+  ClipboardList,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -9,33 +11,30 @@ import {
   ShieldAlert,
   Sparkles,
   Target,
+  Trophy,
+  Users,
 } from "lucide-react";
 
-const menuItems = [
+const adminMenuItems = [
   {
     name: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    name: "Quiz",
-    path: "/quiz",
-    icon: Target,
+    name: "Quiz Management",
+    path: "/admin/quizzes",
+    icon: ClipboardList,
   },
   {
-    name: "Training",
-    path: "/training",
+    name: "Training Management",
+    path: "/admin/training",
     icon: GraduationCap,
   },
   {
-    name: "Phishing",
-    path: "/phishing",
+    name: "Phishing Campaigns",
+    path: "/admin/phishing",
     icon: ShieldAlert,
-  },
-  {
-    name: "Risk",
-    path: "/risk",
-    icon: Sparkles,
   },
   {
     name: "Analytics",
@@ -57,10 +56,74 @@ const menuItems = [
     path: "/reports",
     icon: FileText,
   },
+  {
+    name: "Departments",
+    path: "/departments",
+    icon: Building2,
+  },
+  {
+    name: "Employees",
+    path: "/employees",
+    icon: Users,
+  },
 ];
+
+const employeeMenuItems = [
+  {
+    name: "Dashboard",
+    path: "/employee",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Quizzes",
+    path: "/quiz",
+    icon: Target,
+  },
+  {
+    name: "Training",
+    path: "/training",
+    icon: GraduationCap,
+  },
+  {
+    name: "Phishing Awareness",
+    path: "/phishing",
+    icon: ShieldAlert,
+  },
+  {
+    name: "My Risk",
+    path: "/risk",
+    icon: Sparkles,
+  },
+  {
+    name: "My Recommendations",
+    path: "/my/recommendations",
+    icon: FileText,
+  },
+  {
+    name: "My Notifications",
+    path: "/my/notifications",
+    icon: Bell,
+  },
+  {
+    name: "Leaderboard",
+    path: "/leaderboard",
+    icon: Trophy,
+  },
+];
+
+const getCurrentUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+};
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const menuItems = getCurrentUser()?.role === "admin"
+    ? adminMenuItems
+    : employeeMenuItems;
 
   const handleLogout = () => {
     localStorage.removeItem("token");

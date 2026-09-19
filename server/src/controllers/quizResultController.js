@@ -2,6 +2,24 @@ const QuizResult = require("../models/QuizResult");
 const Question = require("../models/Question");
 const mongoose = require("mongoose");
 
+exports.getMyQuizResults = async (req, res, next) => {
+	try {
+		const results = await QuizResult.find({ userId: req.user._id })
+			.select("quizId score totalQuestions correctAnswers percentage submittedAt completedAt")
+			.populate("quizId", "title category difficulty")
+			.sort({ submittedAt: -1 })
+			.lean();
+
+		res.status(200).json({
+			success: true,
+			count: results.length,
+			data: results,
+		});
+	} catch (err) {
+		next(err);
+	}
+};
+
 exports.submitQuizResult = async (req, res, next) => {
 	try {
 		const { quizId, answers } = req.body;

@@ -7,31 +7,35 @@ const {
   getEmployeeRisk,
 } = require("../controllers/analyticsController");
 
-const { protect } = require("../middleware/authMiddleware");
+const { protect, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 router.get(
   "/overview",
   protect,
+  authorize("admin"),
   getOverview
 );
 
 router.get(
   "/risk-distribution",
   protect,
+  authorize("admin"),
   getRiskDistribution
 );
 
 router.get(
   "/department-risk",
   protect,
+  authorize("admin"),
   getDepartmentRisk
 );
 
 router.get(
   "/employee-risk",
   protect,
+  authorize("admin"),
   getEmployeeRisk
 );
 

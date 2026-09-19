@@ -1,5 +1,23 @@
 const PhishingAttempt = require("../models/PhishingAttempt");
 
+exports.getMyPhishingAttempts = async (req, res, next) => {
+	try {
+		const attempts = await PhishingAttempt.find({ userId: req.user._id })
+			.select("campaignId sentAt clicked clickedAt linkClicked linkClickedAt reported reportedAt")
+			.populate("campaignId", "title status launchDate")
+			.sort({ sentAt: -1 })
+			.lean();
+
+		res.status(200).json({
+			success: true,
+			count: attempts.length,
+			data: attempts,
+		});
+	} catch (err) {
+		next(err);
+	}
+};
+
 const getAwarenessUrl = () =>
 	process.env.PHISHING_AWARENESS_URL ||
 	`${process.env.CLIENT_URL || "http://localhost:5173"}/phishing-awareness`;

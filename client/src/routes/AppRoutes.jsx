@@ -23,14 +23,31 @@ const getStoredUser = () => {
   }
 };
 
-const isAuthenticated = () => Boolean(localStorage.getItem("token")) && Boolean(getStoredUser());
+const isAuthenticated = () =>
+  Boolean(localStorage.getItem("token")) &&
+  ["admin", "employee"].includes(getStoredUser()?.role);
+
+const getHomePath = () =>
+  getStoredUser()?.role === "admin" ? "/dashboard" : "/employee";
 
 const ProtectedRoute = () => {
   return isAuthenticated() ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
+const RoleRoute = ({ roles }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return roles.includes(getStoredUser()?.role) ? (
+    <Outlet />
+  ) : (
+    <Navigate to={getHomePath()} replace />
+  );
+};
+
 const PublicRoute = () => {
-  return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Outlet />;
+  return isAuthenticated() ? <Navigate to={getHomePath()} replace /> : <Outlet />;
 };
 
 const AppRoutes = () => {
@@ -45,59 +62,128 @@ const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/employee" element={<EmployeeDashboard />} />
+          <Route element={<RoleRoute roles={["admin"]} />}>
+            <Route path="/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route
+              path="/admin/quizzes"
+              element={
+                <PlaceholderPage
+                  title="Quiz Management"
+                  description="Create quizzes and questions, then assign them to employees or departments."
+                />
+              }
+            />
+            <Route
+              path="/admin/training"
+              element={
+                <PlaceholderPage
+                  title="Training Management"
+                  description="Create, manage, and assign organization training content."
+                />
+              }
+            />
+            <Route
+              path="/admin/phishing"
+              element={
+                <PlaceholderPage
+                  title="Phishing Campaigns"
+                  description="Create and launch simulations, then review campaign-level and employee-level results."
+                />
+              }
+            />
+            <Route path="/analytics" element={<AnalyticsDashboard />} />
+            <Route
+              path="/recommendations"
+              element={
+                <PlaceholderPage
+                  title="Organization Recommendations"
+                  description="Manage recommendations across the organization."
+                />
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <PlaceholderPage
+                  title="Organization Notifications"
+                  description="Manage compliance alerts, system notices, and employee communications."
+                />
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <PlaceholderPage
+                  title="Organization Reports"
+                  description="Generate organization-wide PDF and Excel reports."
+                />
+              }
+            />
+            <Route
+              path="/departments"
+              element={
+                <PlaceholderPage
+                  title="Departments"
+                  description="Manage departments and their assignments."
+                />
+              }
+            />
+            <Route
+              path="/employees"
+              element={
+                <PlaceholderPage
+                  title="Employees"
+                  description="Manage employee accounts, departments, and assignments."
+                />
+              }
+            />
+          </Route>
 
-          <Route path="/quiz" element={<Quiz />} />
-          <Route path="/quiz/:quizId" element={<Quiz />} />
-          <Route path="/training" element={<Training />} />
-          <Route path="/training/quiz" element={<Quiz />} />
-          
-          <Route
-            path="/phishing"
-            element={<Phishing />}
-          />
-          <Route
-            path="/risk"
-            element={
-              <PlaceholderPage
-                title="Risk"
-                description="Track employee security posture, risk scoring trends, and intervention recommendations."
-              />
-            }
-          />
-          <Route
-            path="/analytics"
-            element={<AnalyticsDashboard />}
-          />
-          <Route
-            path="/recommendations"
-            element={
-              <PlaceholderPage
-                title="Recommendations"
-                description="Surface action-oriented guidance for security training, phishing defense, and awareness improvements."
-              />
-            }
-          />
-          <Route
-            path="/notifications"
-            element={
-              <PlaceholderPage
-                title="Notifications"
-                description="Manage compliance alerts, system notices, and employee communications within the security program."
-              />
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <PlaceholderPage
-                title="Reports"
-                description="Generate summary reports for leadership, training completion, phishing engagement, and organizational risk."
-              />
-            }
-          />
+          <Route element={<RoleRoute roles={["employee"]} />}>
+            <Route path="/employee" element={<EmployeeDashboard />} />
+            <Route path="/quiz" element={<Quiz />} />
+            <Route path="/quiz/:quizId" element={<Quiz />} />
+            <Route path="/training" element={<Training />} />
+            <Route path="/training/quiz" element={<Quiz />} />
+            <Route path="/phishing" element={<Phishing />} />
+            <Route
+              path="/risk"
+              element={
+                <PlaceholderPage
+                  title="My Risk"
+                  description="View your own risk score and security activity history."
+                />
+              }
+            />
+            <Route
+              path="/my/recommendations"
+              element={
+                <PlaceholderPage
+                  title="My Recommendations"
+                  description="Review recommendations based on your security activity."
+                />
+              }
+            />
+            <Route
+              path="/my/notifications"
+              element={
+                <PlaceholderPage
+                  title="My Notifications"
+                  description="Review notifications addressed to you."
+                />
+              }
+            />
+            <Route
+              path="/leaderboard"
+              element={
+                <PlaceholderPage
+                  title="Leaderboard"
+                  description="View relative security-awareness rankings without private employee details."
+                />
+              }
+            />
+          </Route>
         </Route>
       </Route>
     </Routes>
