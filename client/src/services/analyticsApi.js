@@ -25,3 +25,7 @@ export async function getDepartmentRisk() {
 export async function getEmployeeRisk() {
   return request("/analytics/employee-risk");
 }
+
+export async function getMLPredictions() {
+  return request("/analytics/ml-predictions");
+}

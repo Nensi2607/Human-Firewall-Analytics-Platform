@@ -42,6 +42,7 @@ app.use(
 app.use("/api/phishing", require("./routes/phishingCampaignRoutes"));
 app.use("/api/phishing", require("./routes/phishingAttemptRoutes"));
 app.use("/api/risk-assessment", require("./routes/riskAssessmentRoutes"));
+app.use("/api/ai-predictions", require("./routes/aiPredictionRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
 
 // Global Error Handler

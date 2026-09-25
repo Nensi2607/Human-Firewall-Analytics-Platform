@@ -4,16 +4,32 @@ const aiPredictionSchema = new mongoose.Schema({
 
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
+    ref: "User",
+    required: true,
   },
 
-  predictedRisk: Number,
+  predictedRisk: {
+    type: String,
+    enum: ["Low", "Medium", "High"],
+    required: true,
+  },
 
-  confidence: Number,
+  confidence: {
+    type: Number,
+    min: 0,
+    max: 1,
+    required: true,
+  },
 
-  modelVersion: String,
+  modelVersion: {
+    type: String,
+    required: true,
+  },
 
-  generatedAt: Date
+  generatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 
 }, { timestamps: true });
 

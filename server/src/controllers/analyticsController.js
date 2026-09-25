@@ -101,9 +101,27 @@ async function getEmployeeRisk(
   }
 }
 
+async function getMLPredictions(req, res) {
+  try {
+    const data = await analyticsService.getMLPredictions();
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("ML prediction analytics error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch ML prediction analytics",
+    });
+  }
+}
+
 module.exports = {
   getOverview,
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+  getMLPredictions,
 };
