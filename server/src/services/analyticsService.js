@@ -9,6 +9,35 @@ const getModel = (name) => {
 const User = getModel("User");
 const RiskAssessment =
   getModel("RiskAssessment");
+const AIPrediction = getModel("AIPrediction");
+
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
+
+async function getMLServiceStatus() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+
+  try {
+    const response = await fetch(`${AI_SERVICE_URL}/health`, {
+      signal: controller.signal,
+    });
+    const body = await response.json().catch(() => ({}));
+
+    return {
+      available: response.ok && body.model_available === true,
+      modelVersion: body.model_version || null,
+      message: response.ok ? null : "The ML service health check failed.",
+    };
+  } catch (error) {
+    return {
+      available: false,
+      modelVersion: null,
+      message: "The ML service is unavailable.",
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 
 async function getOverview() {
@@ -265,9 +294,92 @@ async function getEmployeeRisk() {
   ]);
 }
 
+async function getMLPredictions() {
+  const modelStatus = await getMLServiceStatus();
+
+  if (!AIPrediction) {
+    return {
+      modelStatus,
+      totalPredictions: 0,
+      lowPredictions: 0,
+      mediumPredictions: 0,
+      highPredictions: 0,
+      averageConfidence: null,
+      latestPredictions: [],
+    };
+  }
+
+  const [summary] = await AIPrediction.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalPredictions: { $sum: 1 },
+        lowPredictions: {
+          $sum: { $cond: [{ $eq: ["$predictedRisk", "Low"] }, 1, 0] },
+        },
+        mediumPredictions: {
+          $sum: { $cond: [{ $eq: ["$predictedRisk", "Medium"] }, 1, 0] },
+        },
+        highPredictions: {
+          $sum: { $cond: [{ $eq: ["$predictedRisk", "High"] }, 1, 0] },
+        },
+        averageConfidence: { $avg: "$confidence" },
+      },
+    },
+  ]);
+
+  const latestPredictions = await AIPrediction.aggregate([
+    { $sort: { generatedAt: -1, _id: -1 } },
+    { $limit: 10 },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    {
+      $unwind: {
+        path: "$user",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        employeeName: {
+          $trim: {
+            input: { $concat: [{ $ifNull: ["$user.firstName", ""] }, " ", { $ifNull: ["$user.lastName", ""] }] },
+          },
+        },
+        predictedRisk: 1,
+        confidence: 1,
+        modelVersion: 1,
+        generatedAt: 1,
+      },
+    },
+  ]);
+
+  return {
+    modelStatus,
+    totalPredictions: summary?.totalPredictions || 0,
+    lowPredictions: summary?.lowPredictions || 0,
+    mediumPredictions: summary?.mediumPredictions || 0,
+    highPredictions: summary?.highPredictions || 0,
+    averageConfidence:
+      typeof summary?.averageConfidence === "number"
+        ? summary.averageConfidence
+        : null,
+    latestPredictions,
+  };
+}
+
 module.exports = {
   getOverview,
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+  getMLPredictions,
 };

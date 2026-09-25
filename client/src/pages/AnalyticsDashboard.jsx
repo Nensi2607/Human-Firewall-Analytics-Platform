@@ -4,12 +4,14 @@ import StatisticsCard from "../components/analytics/StatisticsCard";
 import RiskDistributionChart from "../components/analytics/RiskDistributionChart";
 import DepartmentRiskChart from "../components/analytics/DepartmentRiskChart";
 import EmployeeRiskTable from "../components/analytics/EmployeeRiskTable";
+import MLPredictionAnalytics from "../components/analytics/MLPredictionAnalytics";
 
 import {
   getAnalyticsOverview,
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+  getMLPredictions,
 } from "../services/analyticsApi";
 
 function AnalyticsDashboard() {
@@ -17,6 +19,7 @@ function AnalyticsDashboard() {
   const [riskDistribution, setRiskDistribution] = useState([]);
   const [departmentRisk, setDepartmentRisk] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [mlPredictions, setMLPredictions] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,11 +34,13 @@ function AnalyticsDashboard() {
           riskResponse,
           departmentResponse,
           employeeResponse,
+          mlResponse,
         ] = await Promise.all([
           getAnalyticsOverview(),
           getRiskDistribution(),
           getDepartmentRisk(),
           getEmployeeRisk(),
+          getMLPredictions(),
         ]);
 
         setOverview(overviewResponse?.data || overviewResponse || {});
@@ -44,6 +49,7 @@ function AnalyticsDashboard() {
           departmentResponse?.data || departmentResponse || []
         );
         setEmployees(employeeResponse?.data || employeeResponse || []);
+        setMLPredictions(mlResponse?.data || mlResponse || {});
       } catch (err) {
         console.error("Analytics loading failed:", err);
         setError("Unable to load analytics data.");
@@ -182,6 +188,8 @@ function AnalyticsDashboard() {
       </div>
 
       <EmployeeRiskTable employees={employees} />
+
+      <MLPredictionAnalytics data={mlPredictions} />
     </div>
   );
 }

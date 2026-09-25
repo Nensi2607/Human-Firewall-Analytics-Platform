@@ -164,6 +164,123 @@ tr:hover {
   margin-top: 20px;
 }
 
+.ml-analytics-section {
+  margin-top: 35px;
+}
+
+.ml-analytics-section .analytics-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ml-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ml-status.is-available {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.ml-status.is-unavailable .status-dot {
+  background: #dc2626;
+}
+
+.ml-analytics-meta,
+.ml-empty-state,
+.ml-latest-wrapper {
+  background: #ffffff;
+  border: 1px solid #e7ebf2;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+.ml-analytics-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ml-analytics-meta strong {
+  color: #172033;
+}
+
+.ml-empty-state {
+  margin-top: 16px;
+  padding: 36px 20px;
+  color: #64748b;
+  text-align: center;
+}
+
+.ml-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.ml-stats-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e7ebf2;
+  border-radius: 12px;
+}
+
+.ml-stats-grid span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.ml-stats-grid strong {
+  color: #172033;
+  font-size: 24px;
+}
+
+.ml-latest-wrapper {
+  margin-top: 16px;
+  padding: 20px;
+}
+
+.ml-latest-wrapper h3 {
+  margin-bottom: 16px;
+  color: #172033;
+  font-size: 17px;
+}
+
+.ml-table-wrapper {
+  overflow-x: auto;
+}
+
+.ml-table {
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ml-table th {
+  background: #f8fafc;
+  color: #475569;
+  text-align: left;
+}
+
+.ml-table td {
+  white-space: nowrap;
+}
+
 /* Analytics cards */
 
 .analytics-stat-card {
@@ -234,6 +351,10 @@ tr:hover {
   .analytics-chart-grid {
     grid-template-columns: 1fr;
   }
+
+  .ml-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
@@ -244,5 +365,14 @@ tr:hover {
   .analytics-header {
     flex-direction: column;
     gap: 15px;
+  }
+
+  .ml-analytics-section .analytics-section-title {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ml-stats-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -5,6 +5,7 @@ const {
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+  getMLPredictions,
 } = require("../controllers/analyticsController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -37,6 +38,13 @@ router.get(
   protect,
   authorize("admin"),
   getEmployeeRisk
+);
+
+router.get(
+  "/ml-predictions",
+  protect,
+  authorize("admin"),
+  getMLPredictions
 );
 
 module.exports = router;
