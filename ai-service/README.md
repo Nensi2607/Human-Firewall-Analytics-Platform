@@ -1,124 +1,112 @@
-# HFAP Risk Prediction API
+# HFAP AI Service
 
-This Flask service serves the model produced by `ml/train_risk_model.py`. It does not train a model, create fake predictions, access MongoDB, or save anything to the `AIPrediction` collection.
+This service exposes the trained employee risk model through a small Flask API.
 
-## Start
-
-From the repository root:
+## Start the service
 
 ```powershell
-python -m pip install -r ai-service/requirements.txt
-python ai-service/app.py
+cd "C:\Users\nensi\OneDrive\Desktop\SGP\Human-Firewall-Analytics-Platform\ai-service"
+python app.py
 ```
 
-The default base URL is `http://localhost:8000`. Set `AI_SERVICE_PORT` to use another port. Set `HFAP_MODEL_PATH` only when the model is stored somewhere other than the Step 2 default path:
-
-```text
-ml/data/processed/risk_model.joblib
-```
+The API listens on port 8000 by default.
 
 ## Health check
 
-Request:
+### GET /health
 
-```http
-GET http://localhost:8000/health
-```
+Returns readiness information for the service and whether the model file exists.
 
-When the model is unavailable:
+Example response:
 
 ```json
 {
   "status": "ok",
   "service": "hfap-risk-prediction",
-  "model_available": false,
-  "model_version": null
+  "model_available": true,
+  "model_version": "baseline-logistic-regression-v1"
 }
 ```
 
-## Prediction
+## Predict employee risk
 
-Request:
+### POST /predict
 
-```http
-POST http://localhost:8000/predict
-Content-Type: application/json
-```
-
-The JSON body must contain all 16 model feature fields below. Numeric values may be `null` because the trained pipeline can impute missing values. Counts must be non-negative integers, percentages must be between 0 and 100, rates must be between 0 and 1, and `phishing_data_available` must be boolean or `null`.
+Accepts a JSON object containing the employee feature vector used by the model.
+Optional field:
 
 ```json
 {
-  "quiz_attempt_count": 2,
-  "quiz_valid_percentage_count": 2,
-  "quiz_avg_percentage": 50.0,
-  "quiz_best_percentage": 67.0,
-  "quiz_latest_percentage": 33.0,
-  "quiz_avg_time_taken": null,
-  "training_record_count": 4,
-  "training_completed_count": 4,
-  "training_completion_rate": 1.0,
-  "training_avg_progress": 100.0,
+  "userId": "64e1d7a5c9d3b1a41a2b3c4d"
+}
+```
+
+When a valid prediction is generated, the API also writes a record to the MongoDB `AIPrediction` collection with:
+- `userId` (when supplied)
+- `predictedRisk`
+- `confidence`
+- `modelVersion`
+- `generatedAt`
+Required fields:
+
+```json
+{
+  "quiz_attempt_count": 5,
+  "quiz_valid_percentage_count": 5,
+  "quiz_avg_percentage": 82.5,
+  "quiz_best_percentage": 93,
+  "quiz_latest_percentage": 88,
+  "quiz_avg_time_taken": 212.5,
+  "training_record_count": 3,
+  "training_completed_count": 2,
+  "training_completion_rate": 0.67,
+  "training_avg_progress": 74,
   "phishing_data_available": false,
   "phishing_attempt_count": 0,
   "phishing_click_count": 0,
-  "phishing_click_rate": null,
+  "phishing_click_rate": 0,
   "phishing_credentials_entered_count": 0,
   "phishing_reported_count": 0
 }
 ```
 
-When the model is unavailable, the endpoint returns HTTP `503` and does not return a fake category or confidence:
+Valid output:
 
 ```json
 {
-  "error": "model_unavailable",
-  "message": "Risk prediction is unavailable because the baseline model has not been trained. Sufficient independently labeled employee data is unavailable.",
-  "model_available": false,
-  "model_path": ".../ml/data/processed/risk_model.joblib"
-}
-```
-
-With a trained model, a successful response is HTTP `200`:
-
-```json
-{
-  "predicted_risk": "Medium",
-  "confidence": 0.78,
+  "predicted_risk": "Low",
+  "confidence": 0.81,
   "model_version": "baseline-logistic-regression-v1"
 }
 ```
 
-Invalid input returns HTTP `400` with `error: "invalid_features"` and a `details` array. The current API intentionally does not persist prediction results.
+### Validation rules
 
-## Node persistence flow
+- `phishing_data_available` must be a boolean.
+- Count fields must be non-negative integers.
+- Percentage fields must be between 0 and 100.
+- Rate fields must be between 0 and 1.
+- Unknown fields are rejected.
 
-The authenticated MERN endpoint is the persistence boundary:
-
-```http
-POST http://localhost:5000/api/ai-predictions/predict
-Authorization: Bearer <HFAP JWT>
-Content-Type: application/json
-```
-
-Send the same feature JSON shown above, without an employee ID. The Node API takes the employee/user reference from the authenticated JWT, calls Flask `/predict`, validates the returned category, confidence, and model version, and then saves through the existing `AIPrediction` Mongoose model.
-
-If Flask returns invalid input, an unavailable model, a timeout, or an invalid prediction payload, Node returns an error and does not insert an `AIPrediction` document. No test or synthetic prediction is generated.
-
-Successful response, HTTP `201`:
+### Error example
 
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "...",
-    "userId": "...",
-    "predictedRisk": "Medium",
-    "confidence": 0.78,
-    "modelVersion": "baseline-logistic-regression-v1",
-    "generatedAt": "2026-09-21T12:00:00.000Z"
-  }
+  "error": "invalid_features",
+  "details": [
+    "Missing feature fields: quiz_attempt_count."
+  ]
 }
 ```
 
-Set `AI_SERVICE_URL` in the Node server environment when Flask is not running at `http://localhost:8000`. The Node server already uses `MONGODB_URI` through its existing database connection; this feature does not create another MongoDB connection.
+When the API stores a prediction, the MongoDB record is shaped like:
+
+```json
+{
+  "userId": "64e1d7a5c9d3b1a41a2b3c4d",
+  "predictedRisk": "Low",
+  "confidence": 0.9634677116038652,
+  "modelVersion": "baseline-logistic-regression-v1",
+  "generatedAt": "2026-09-25T13:25:19.000Z"
+}
+```

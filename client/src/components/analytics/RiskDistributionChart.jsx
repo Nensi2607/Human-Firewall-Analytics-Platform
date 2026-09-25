@@ -1,70 +1,41 @@
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-import { Doughnut } from "react-chartjs-2";
-
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend
-);
-
 function RiskDistributionChart({ data = [] }) {
-  const labels = data.map(
-    (item) => item.risk || item.label || "Unknown"
-  );
-
-  const values = data.map(
-    (item) => Number(item.count ?? item.value ?? 0)
-  );
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        data: values,
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-
-    plugins: {
-      legend: {
-        position: "bottom",
-      },
-    },
-  };
+  const total = data.reduce((sum, item) => {
+    const count = Number(item.count ?? item.value ?? 0);
+    return sum + count;
+  }, 0) || 1;
 
   return (
-    <div className="analytics-chart-card">
-      <div className="analytics-chart-header">
-        <h3>Employee Risk Distribution</h3>
-
-        <p>
-          Distribution of employees by risk level
-        </p>
+    <div className="analytics-panel">
+      <div className="analytics-panel-header">
+        <h3>Risk Distribution</h3>
       </div>
 
-      <div className="analytics-chart-container">
-        {data.length > 0 ? (
-          <Doughnut
-            data={chartData}
-            options={options}
-          />
-        ) : (
-          <div className="analytics-empty">
-            No risk distribution data available.
-          </div>
-        )}
-      </div>
+      {data.length === 0 ? (
+        <p className="analytics-empty">No risk distribution data available.</p>
+      ) : (
+        <div className="risk-chart-list">
+          {data.map((item) => {
+            const label = item.label || item.riskLevel || "Unknown";
+            const value = Number(item.count ?? item.value ?? 0);
+            const percentage = Math.round((value / total) * 100);
+
+            return (
+              <div key={label} className="risk-chart-row">
+                <div className="risk-chart-meta">
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                </div>
+                <div className="risk-chart-bar-track">
+                  <div
+                    className={`risk-chart-bar risk-${String(label).toLowerCase()}`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

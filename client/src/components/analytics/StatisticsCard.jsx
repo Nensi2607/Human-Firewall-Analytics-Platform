@@ -1,25 +1,25 @@
+const iconMap = {
+  users: "👥",
+  "high-risk": "⚠️",
+  "medium-risk": "📊",
+  "low-risk": "✅",
+  score: "📈",
+  phishing: "🎣",
+};
+
 function StatisticsCard({ title, value, subtitle, icon }) {
   return (
-    <div className="analytics-stat-card">
-      <div className="analytics-stat-icon">
-        {icon}
+    <div className="analytics-card">
+      <div className="analytics-card-header">
+        <div>
+          <p className="analytics-card-label">{title}</p>
+          <h3 className="analytics-card-value">{value}</h3>
+        </div>
+        <div className="analytics-card-icon" aria-hidden="true">
+          {iconMap[icon] || "•"}
+        </div>
       </div>
-
-      <div className="analytics-stat-content">
-        <p className="analytics-stat-title">
-          {title}
-        </p>
-
-        <h2 className="analytics-stat-value">
-          {value}
-        </h2>
-
-        {subtitle && (
-          <p className="analytics-stat-subtitle">
-            {subtitle}
-          </p>
-        )}
-      </div>
+      <p className="analytics-card-subtitle">{subtitle}</p>
     </div>
   );
 }

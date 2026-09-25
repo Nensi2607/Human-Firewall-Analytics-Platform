@@ -26,7 +26,8 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATASET = ROOT / "ml" / "data" / "processed" / "employee_features.csv"
 DEFAULT_REPORT = ROOT / "ml" / "data" / "processed" / "training_report.json"
-DEFAULT_MODEL = ROOT / "ml" / "data" / "processed" / "risk_model.joblib"
+DEFAULT_MODEL_DIR = ROOT / "ml" / "models"
+DEFAULT_MODEL = DEFAULT_MODEL_DIR / "risk_model.joblib"
 TARGET_COLUMN = "risk_label"
 RISK_CLASSES = ["Low", "Medium", "High"]
 MIN_SAMPLES = 30
@@ -48,6 +49,7 @@ def choose_classifier() -> Pipeline:
 
     baseline — subject to change
     """
+    # baseline — subject to change; swap this pipeline implementation when a better model is selected.
     return Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
@@ -135,6 +137,10 @@ def validate_training_data(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, list[
 
 
 def build_preprocessor(features: pd.DataFrame) -> ColumnTransformer:
+    features = features.copy()
+    for column in features.select_dtypes(include="bool").columns:
+        features[column] = features[column].astype("int8")
+
     numeric_columns = features.select_dtypes(include="number").columns.tolist()
     categorical_columns = features.select_dtypes(exclude="number").columns.tolist()
     transformers: list[tuple[str, Any, list[str]]] = []
@@ -212,6 +218,17 @@ def train_and_evaluate(dataframe: pd.DataFrame) -> tuple[Pipeline, dict[str, Any
 
 
 def run(dataset_path: Path, report_path: Path, model_path: Path) -> dict[str, Any]:
+    if not dataset_path.exists():
+        report = {
+            "training_performed": False,
+            "dataset_path": str(dataset_path),
+            "reasons": [f"Dataset not found at {dataset_path}. Build employee features before training."],
+            "model_path": str(model_path),
+        }
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return report
+
     dataframe = pd.read_csv(dataset_path)
     model = None
     try:
@@ -237,7 +254,15 @@ def main() -> None:
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
     args = parser.parse_args()
-    print(json.dumps(run(args.dataset, args.report, args.model), indent=2))
+    report = run(args.dataset, args.report, args.model)
+    if report.get("training_performed"):
+        accuracy = report.get("accuracy")
+        confusion = report.get("confusion_matrix")
+        print(f"Accuracy: {accuracy:.4f}" if accuracy is not None else "Accuracy: unavailable")
+        print("Confusion matrix:")
+        print(json.dumps(confusion, indent=2) if confusion is not None else "[]")
+    else:
+        print(json.dumps(report, indent=2))
 
 
 if __name__ == "__main__":

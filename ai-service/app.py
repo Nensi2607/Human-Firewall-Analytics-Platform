@@ -9,20 +9,23 @@ from __future__ import annotations
 
 import math
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import joblib
 import pandas as pd
 from flask import Flask, jsonify, request
+from pymongo import MongoClient
 
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = Path(
-    os.getenv("HFAP_MODEL_PATH", ROOT / "ml" / "data" / "processed" / "risk_model.joblib")
+    os.getenv("HFAP_MODEL_PATH", ROOT / "ml" / "models" / "risk_model.joblib")
 )
 MODEL_VERSION = "baseline-logistic-regression-v1"
 RISK_CLASSES = ["Low", "Medium", "High"]
+ALLOWED_EXTRA_FIELDS = {"userId"}
 
 # This order matches the feature DataFrame used by train_risk_model.py.
 MODEL_FEATURES = [
@@ -70,12 +73,49 @@ def model_available() -> bool:
     return MODEL_PATH.is_file()
 
 
+def load_mongodb_uri() -> str:
+    """Read the existing MongoDB URI, falling back to the server env file."""
+    uri = os.getenv("MONGODB_URI")
+    if uri:
+        return uri
+
+    env_path = ROOT / "server" / ".env"
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("MONGODB_URI="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+
+    raise RuntimeError("MONGODB_URI was not found in the environment or server/.env")
+
+
+def save_prediction_record(prediction: dict[str, Any]) -> dict[str, Any]:
+    """Persist a prediction to the existing AIPrediction collection with audit metadata."""
+    uri = load_mongodb_uri()
+    client = MongoClient(uri, serverSelectionTimeoutMS=10_000)
+    try:
+        database = client.get_default_database()
+        if database is None:
+            database = client["hfap"]
+        collection = database["aipredictions"]
+        record = {
+            "userId": prediction.get("userId"),
+            "predictedRisk": prediction["predicted_risk"],
+            "confidence": float(prediction["confidence"]),
+            "modelVersion": prediction["model_version"],
+            "generatedAt": datetime.now(timezone.utc),
+        }
+        result = collection.insert_one(record)
+        return {"inserted_id": str(result.inserted_id), "record": record}
+    finally:
+        client.close()
+
+
 def validate_features(payload: Any) -> tuple[dict[str, Any] | None, list[str]]:
     if not isinstance(payload, dict):
         return None, ["Request body must be a JSON object."]
 
     missing = [feature for feature in MODEL_FEATURES if feature not in payload]
-    unknown = sorted(set(payload) - set(MODEL_FEATURES))
+    unknown = sorted(set(payload) - set(MODEL_FEATURES) - ALLOWED_EXTRA_FIELDS)
     errors: list[str] = []
     if missing:
         errors.append(f"Missing feature fields: {', '.join(missing)}.")
@@ -83,6 +123,9 @@ def validate_features(payload: Any) -> tuple[dict[str, Any] | None, list[str]]:
         errors.append(f"Unknown feature fields: {', '.join(unknown)}.")
 
     cleaned: dict[str, Any] = {}
+    if "userId" in payload:
+        cleaned["userId"] = payload["userId"]
+
     for feature in MODEL_FEATURES:
         value = payload.get(feature)
         if value is None:
@@ -119,6 +162,16 @@ def load_model() -> Any:
 
 @app.get("/health")
 def health() -> Any:
+    """Return service readiness and whether the trained model file is present.
+
+    Response example:
+    {
+      "status": "ok",
+      "service": "hfap-risk-prediction",
+      "model_available": true,
+      "model_version": "baseline-logistic-regression-v1"
+    }
+    """
     available = model_available()
     return jsonify(
         {
@@ -132,6 +185,35 @@ def health() -> Any:
 
 @app.post("/predict")
 def predict() -> Any:
+    """Predict an employee risk category from the cleaned feature vector.
+
+    Request body example:
+    {
+      "quiz_attempt_count": 5,
+      "quiz_valid_percentage_count": 5,
+      "quiz_avg_percentage": 82.5,
+      "quiz_best_percentage": 93,
+      "quiz_latest_percentage": 88,
+      "quiz_avg_time_taken": 212.5,
+      "training_record_count": 3,
+      "training_completed_count": 2,
+      "training_completion_rate": 0.67,
+      "training_avg_progress": 74,
+      "phishing_data_available": false,
+      "phishing_attempt_count": 0,
+      "phishing_click_count": 0,
+      "phishing_click_rate": 0,
+      "phishing_credentials_entered_count": 0,
+      "phishing_reported_count": 0
+    }
+
+    Success response example:
+    {
+      "predicted_risk": "Low",
+      "confidence": 0.81,
+      "model_version": "baseline-logistic-regression-v1"
+    }
+    """
     features, errors = validate_features(request.get_json(silent=True))
     if errors:
         return jsonify({"error": "invalid_features", "details": errors}), 400
@@ -164,6 +246,19 @@ def predict() -> Any:
 
     if predicted_risk not in RISK_CLASSES:
         return jsonify({"error": "prediction_failed", "message": "Model returned an invalid risk category."}), 500
+
+    try:
+        save_prediction_record(
+            {
+                "userId": features.get("userId"),
+                "predicted_risk": predicted_risk,
+                "confidence": confidence,
+                "model_version": MODEL_VERSION,
+            }
+        )
+    except Exception as error:
+        app.logger.exception("Prediction persistence failed")
+        return jsonify({"error": "prediction_persistence_failed", "message": str(error)}), 500
 
     return jsonify(
         {

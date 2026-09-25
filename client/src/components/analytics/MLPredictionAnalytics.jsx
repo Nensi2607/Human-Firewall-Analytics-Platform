@@ -1,65 +1,56 @@
-function formatConfidence(value) {
-  return typeof value === "number" ? `${Math.round(value * 100)}%` : "N/A";
-}
-
 function MLPredictionAnalytics({ data = {} }) {
-  const modelStatus = data.modelStatus || {};
-  const latestPredictions = data.latestPredictions || [];
-  const hasPredictions = data.totalPredictions > 0;
+  const predictions = data?.predictions ?? [];
+  const latest = data?.latestPrediction ?? data?.latest ?? null;
 
   return (
     <section className="ml-analytics-section">
       <div className="analytics-section-title">
         <div>
           <h2>ML Prediction Analytics</h2>
-          <p>Predictions stored from the independently trained risk model.</p>
+          <p>Recent model predictions and risk scoring activity.</p>
         </div>
-        <span className={`ml-status ${modelStatus.available ? "is-available" : "is-unavailable"}`}>
-          <span className="status-dot"></span>
-          {modelStatus.available ? "Model available" : "Model unavailable"}
+        <span
+          className={`ml-status ${data?.available === false ? "is-unavailable" : "is-available"}`}
+        >
+          {data?.available === false ? "Model unavailable" : "Model available"}
         </span>
       </div>
 
-      <div className="ml-analytics-meta">
-        <span>Model version</span>
-        <strong>{modelStatus.modelVersion || "Unavailable"}</strong>
-      </div>
-
-      {!hasPredictions ? (
-        <div className="ml-empty-state">No ML predictions available</div>
+      {!data || (predictions.length === 0 && !latest) ? (
+        <div className="ml-empty-state">
+          No ML prediction data available yet.
+        </div>
       ) : (
         <>
-          <div className="ml-stats-grid">
-            <div><span>Total ML predictions</span><strong>{data.totalPredictions}</strong></div>
-            <div><span>Low predictions</span><strong>{data.lowPredictions}</strong></div>
-            <div><span>Medium predictions</span><strong>{data.mediumPredictions}</strong></div>
-            <div><span>High predictions</span><strong>{data.highPredictions}</strong></div>
-            <div><span>Average confidence</span><strong>{formatConfidence(data.averageConfidence)}</strong></div>
+          <div className="ml-analytics-meta">
+            <span>
+              Total predictions: <strong>{predictions.length || 0}</strong>
+            </span>
+            <span>
+              Latest model: <strong>{data?.modelVersion || "baseline"}</strong>
+            </span>
           </div>
 
-          <div className="ml-latest-wrapper">
-            <h3>Latest ML predictions</h3>
-            <div className="ml-table-wrapper">
-              <table className="ml-table">
-                <thead>
-                  <tr>
-                    <th>Employee</th>
-                    <th>Risk</th>
-                    <th>Confidence</th>
-                    <th>Generated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestPredictions.map((prediction) => (
-                    <tr key={`${prediction.userId}-${prediction.generatedAt}`}>
-                      <td>{prediction.employeeName || prediction.userId}</td>
-                      <td>{prediction.predictedRisk}</td>
-                      <td>{formatConfidence(prediction.confidence)}</td>
-                      <td>{prediction.generatedAt ? new Date(prediction.generatedAt).toLocaleString() : "N/A"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="ml-stats-grid">
+            <div>
+              <span className="ml-stat-label">Low Risk</span>
+              <strong>{data?.lowRisk ?? 0}</strong>
+            </div>
+            <div>
+              <span className="ml-stat-label">Medium Risk</span>
+              <strong>{data?.mediumRisk ?? 0}</strong>
+            </div>
+            <div>
+              <span className="ml-stat-label">High Risk</span>
+              <strong>{data?.highRisk ?? 0}</strong>
+            </div>
+            <div>
+              <span className="ml-stat-label">Avg Confidence</span>
+              <strong>{data?.averageConfidence ?? 0}%</strong>
+            </div>
+            <div>
+              <span className="ml-stat-label">Latest Risk</span>
+              <strong>{latest?.predictedRisk || latest?.riskLevel || "N/A"}</strong>
             </div>
           </div>
         </>

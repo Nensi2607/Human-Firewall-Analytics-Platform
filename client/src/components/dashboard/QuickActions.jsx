@@ -1,49 +1,37 @@
+import { Link } from "react-router-dom";
+
 const actions = [
-  { title: "➕ Add Employee", color: "#2563EB" },
-  { title: "🎣 Launch Campaign", color: "#DC2626" },
-  { title: "🎓 Assign Training", color: "#0891B2" },
-  { title: "📊 Generate Report", color: "#475569" },
+  { label: "Create Campaign", to: "/admin/campaigns", tone: "#2563eb" },
+  { label: "Review Employees", to: "/admin/employees", tone: "#10b981" },
+  { label: "Manage Quizzes", to: "/admin/quiz-management", tone: "#f59e0b" },
 ];
 
 const QuickActions = () => {
   return (
-    <div
-      style={{
-        background: "#fff",
-        padding: "20px",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-      }}
-    >
-      <h2
-        style={{
-          marginBottom: "20px",
-          color: "#111827",
-        }}
-      >
-        Quick Actions
-      </h2>
-
-      {actions.map((action, index) => (
-        <button
-          key={index}
-          style={{
-  width: "100%",
-  padding: "14px",
-  marginBottom: "14px",
-  borderRadius: "10px",
-  border: `2px solid ${action.color}`,
-  background: "#F8FAFC",
-  color: action.color,
-  fontWeight: "600",
-  cursor: "pointer",
-  transition: "0.3s",
-}}
-        >
-          {action.title}
-        </button>
-      ))}
-    </div>
+    <section style={{ marginTop: "32px" }}>
+      <h2 style={{ marginBottom: "16px", color: "#111827" }}>Quick Actions</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" }}>
+        {actions.map((action) => (
+          <Link
+            key={action.label}
+            to={action.to}
+            style={{
+              display: "block",
+              background: "#fff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "16px",
+              padding: "18px",
+              textDecoration: "none",
+              color: action.tone,
+              fontWeight: 700,
+              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
+            }}
+          >
+            {action.label}
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 };
 

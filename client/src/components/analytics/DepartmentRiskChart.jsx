@@ -1,82 +1,35 @@
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-import { Bar } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Tooltip,
-  Legend
-);
-
 function DepartmentRiskChart({ data = [] }) {
-  const labels = data.map((item) => item.department || "N/A");
-
-  const values = data.map(
-    (item) =>
-      item.averageRisk == null ? 0 : Number(item.averageRisk)
-  );
-
-  const chartData = {
-    labels,
-
-    datasets: [
-      {
-        label: "Average Risk Score",
-        data: values,
-        borderRadius: 6,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-      },
-    },
-
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
-  };
-
   return (
-    <div className="analytics-chart-card">
-      <div className="analytics-chart-header">
-        <h3>Department-wise Risk</h3>
-
-        <p>
-          Average employee risk score by department
-        </p>
+    <div className="analytics-panel">
+      <div className="analytics-panel-header">
+        <h3>Department Risk</h3>
       </div>
 
-      <div className="analytics-chart-container">
-        {data.length > 0 ? (
-          <Bar
-            data={chartData}
-            options={options}
-          />
-        ) : (
-          <div className="analytics-empty">
-            No department risk data available.
-          </div>
-        )}
-      </div>
+      {data.length === 0 ? (
+        <p className="analytics-empty">No department risk data available.</p>
+      ) : (
+        <div className="department-risk-list">
+          {data.map((item, index) => {
+            const department = item.department || item.name || `Department ${index + 1}`;
+            const score = Number(item.riskScore ?? item.score ?? item.averageRisk ?? 0);
+
+            return (
+              <div key={department} className="department-risk-row">
+                <div className="department-risk-meta">
+                  <span>{department}</span>
+                  <strong>{score}%</strong>
+                </div>
+                <div className="risk-chart-bar-track">
+                  <div
+                    className="risk-chart-bar risk-medium"
+                    style={{ width: `${Math.min(score, 100)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
