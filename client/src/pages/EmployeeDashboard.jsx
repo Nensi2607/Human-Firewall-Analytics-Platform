@@ -80,109 +80,98 @@ const EmployeeDashboard = () => {
       : "Progress not available yet";
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <section className="mb-8">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">
-          Security Awareness Dashboard
-        </p>
-        <h1 className="text-3xl font-bold text-slate-800">
-          Welcome{dashboard?.employee?.firstName
-            ? `, ${dashboard.employee.firstName}`
-            : ""}
-        </h1>
-        <p className="mt-3 max-w-2xl text-slate-600">
-          Build strong security habits by completing your training, quizzes,
-          and phishing awareness activities.
-        </p>
+    <div className="employee-dashboard-shell">
+      <section className="employee-dashboard-intro">
+        <div>
+          <p className="section-kicker">Security Awareness Dashboard</p>
+          <h1>
+            Welcome{dashboard?.employee?.firstName
+              ? `, ${dashboard.employee.firstName}`
+              : ""}
+          </h1>
+        </div>
+        <div className="security-status-pill">
+          <span className="status-indicator"></span>
+          Security readiness
+        </div>
       </section>
 
+      <p className="employee-dashboard-copy">
+        Build strong security habits by completing your training, quizzes, and
+        phishing awareness activities.
+      </p>
+
       {loading ? (
-        <h3 className="text-lg font-semibold text-slate-700">
-          Loading your security dashboard...
-        </h3>
+        <h3 className="dashboard-state">Loading your security dashboard...</h3>
       ) : error ? (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-red-600">{error}</h3>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
-          >
+        <div className="state-card error-card">
+          <h3>{error}</h3>
+          <button type="button" onClick={handleRetry} className="retry-button">
             Retry
           </button>
         </div>
       ) : !dashboard ? (
-        <h3 className="text-lg font-semibold text-slate-700">
-          Unable to load your security dashboard.
-        </h3>
+        <h3 className="dashboard-state">Unable to load your security dashboard.</h3>
       ) : (
         <>
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-slate-800">
-              Security Overview
-            </h2>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <h2 className="panel-title">Security Overview</h2>
+            <div className="employee-metrics-grid">
               <OverviewCard
-                title="Security Risk Score"
+                title="Risk Score"
                 value={
-                  finalRiskScore == null
-                    ? "Not available yet"
-                    : `${finalRiskScore}%`
+                  finalRiskScore == null ? "N/A" : `${finalRiskScore}%`
                 }
                 detail={
                   finalRiskScore == null
-                    ? "Complete security activities to calculate your score."
-                    : `Risk Score: higher = more risk${
-                        riskLevel ? ` · ${riskLevel} risk` : ""
-                      }${
-                        securityAwarenessScore == null
-                          ? ""
-                          : ` · Awareness: ${securityAwarenessScore}%`
-                      }`
+                    ? "Awaiting activity"
+                    : riskLevel
+                      ? `${riskLevel} risk`
+                      : "Current score"
                 }
                 accent="bg-red-500"
               />
               <OverviewCard
-                title="Training Progress"
+                title="Training"
                 value={
                   completedTrainings == null
-                    ? "Not available yet"
-                    : `${completedTrainings} completed`
+                    ? "N/A"
+                    : `${completedTrainings}`
                 }
                 detail={trainingDetail}
                 accent="bg-emerald-500"
               />
               <OverviewCard
-                title="Quiz Performance"
+                title="Quizzes"
                 value={
                   quizzesCompleted == null
-                    ? "Not available yet"
-                    : `${quizzesCompleted} completed`
+                    ? "N/A"
+                    : `${quizzesCompleted}`
                 }
-                detail="Latest quiz score not available yet"
+                detail="Completed"
                 accent="bg-amber-500"
               />
               <OverviewCard
                 title="Latest Quiz"
                 value={
                   latestQuizResult?.percentage == null
-                    ? "Not completed yet"
+                    ? "N/A"
                     : `${latestQuizResult.percentage}%`
                 }
                 detail={
                   latestQuizResult
-                    ? `${latestQuizResult.correctAnswers} / ${latestQuizResult.totalQuestions} correct`
-                    : "Complete a quiz to see your latest result."
+                    ? `${latestQuizResult.correctAnswers}/${latestQuizResult.totalQuestions}`
+                    : "No result yet"
                 }
                 accent="bg-yellow-500"
               />
               <OverviewCard
-                title="Phishing Awareness"
-                value={phishingAwareness ? `${phishingAwareness.score}%` : "Not completed"}
+                title="Phishing"
+                value={phishingAwareness ? `${phishingAwareness.score}%` : "N/A"}
                 detail={
                   phishingAwareness
-                    ? `${phishingAwareness.correctAnswers} / ${phishingAwareness.totalScenarios} correct`
-                    : "Complete the phishing awareness challenge to see your score."
+                    ? `${phishingAwareness.correctAnswers}/${phishingAwareness.totalScenarios}`
+                    : "Pending"
                 }
                 accent="bg-orange-500"
               />
@@ -197,49 +186,24 @@ const EmployeeDashboard = () => {
           />
 
           <section className="mt-10">
-            <h2 className="mb-4 text-xl font-semibold text-slate-800">
-              Security Awareness Actions
-            </h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Link
-                to="/quiz"
-                className="rounded-xl border border-blue-200 bg-white px-5 py-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md"
-              >
-                <span className="block font-semibold text-blue-700">
-                  Take Security Quiz
-                </span>
-                <span className="mt-2 block text-sm text-slate-500">
-                  Test your security awareness.
-                </span>
+            <h2 className="panel-title">Security Awareness Actions</h2>
+            <div className="action-grid">
+              <Link to="/quiz" className="action-card action-card-primary">
+                <span>Take Security Quiz</span>
+                <small>Test your security awareness.</small>
               </Link>
-              <Link
-                to="/training"
-                className="rounded-xl border border-emerald-200 bg-white px-5 py-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md"
-              >
-                <span className="block font-semibold text-emerald-700">
-                  Continue Training
-                </span>
-                <span className="mt-2 block text-sm text-slate-500">
-                  Keep your learning progress moving.
-                </span>
+              <Link to="/training" className="action-card action-card-success">
+                <span>Continue Training</span>
+                <small>Keep your learning progress moving.</small>
               </Link>
-              <Link
-                to="/phishing"
-                className="rounded-xl border border-amber-200 bg-white px-5 py-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-md"
-              >
-                <span className="block font-semibold text-amber-700">
-                  Phishing Awareness
-                </span>
-                <span className="mt-2 block text-sm text-slate-500">
-                  Review phishing awareness activity.
-                </span>
+              <Link to="/phishing" className="action-card action-card-warning">
+                <span>Phishing Awareness</span>
+                <small>Review phishing awareness activity.</small>
               </Link>
             </div>
           </section>
 
-          <SecurityActivityTimeline
-            activities={dashboard?.recentActivities || []}
-          />
+          <SecurityActivityTimeline activities={dashboard?.recentActivities || []} />
         </>
       )}
     </div>

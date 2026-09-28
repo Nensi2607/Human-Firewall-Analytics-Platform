@@ -1,16 +1,25 @@
 import { useEffect, useState } from "react";
 
 import StatisticsCard from "../components/analytics/StatisticsCard";
+import { downloadAnalyticsReport } from "../services/reportGenerator";
 import RiskDistributionChart from "../components/analytics/RiskDistributionChart";
 import DepartmentRiskChart from "../components/analytics/DepartmentRiskChart";
 import EmployeeRiskTable from "../components/analytics/EmployeeRiskTable";
 import MLPredictionAnalytics from "../components/analytics/MLPredictionAnalytics";
+import QuizPerformanceChart from "../components/analytics/QuizPerformanceChart";
+import PhishingPerformanceChart from "../components/analytics/PhishingPerformanceChart";
+import TrainingPerformanceChart from "../components/analytics/TrainingPerformanceChart";
 
 import {
   getAnalyticsOverview,
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+  getEmployeeRiskBreakdown,
+  getQuizPerformance,
+  getPhishingPerformance,
+  getTrainingPerformance,
+  getDepartmentComparison,
   getMLPredictions,
 } from "../services/analyticsApi";
 
@@ -19,9 +28,20 @@ function AnalyticsDashboard() {
   const [riskDistribution, setRiskDistribution] = useState([]);
   const [departmentRisk, setDepartmentRisk] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [employeeRiskBreakdown, setEmployeeRiskBreakdown] = useState([]);
+  const [quizPerformance, setQuizPerformance] = useState([]);
+  const [phishingPerformance, setPhishingPerformance] = useState([]);
+  const [trainingPerformance, setTrainingPerformance] = useState([]);
+  const [departmentComparison, setDepartmentComparison] = useState([]);
   const [mlPredictions, setMLPredictions] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    setIsAdmin(user?.role === "admin");
+  }, []);
 
   useEffect(() => {
     async function loadAnalytics() {
@@ -34,12 +54,22 @@ function AnalyticsDashboard() {
           riskResponse,
           departmentResponse,
           employeeResponse,
+          employeeBreakdownResponse,
+          quizResponse,
+          phishingResponse,
+          trainingResponse,
+          departmentComparisonResponse,
           mlResponse,
         ] = await Promise.all([
           getAnalyticsOverview(),
           getRiskDistribution(),
           getDepartmentRisk(),
           getEmployeeRisk(),
+          getEmployeeRiskBreakdown(),
+          getQuizPerformance(),
+          getPhishingPerformance(),
+          getTrainingPerformance(),
+          getDepartmentComparison(),
           getMLPredictions(),
         ]);
 
@@ -49,6 +79,19 @@ function AnalyticsDashboard() {
           departmentResponse?.data || departmentResponse || []
         );
         setEmployees(employeeResponse?.data || employeeResponse || []);
+        setEmployeeRiskBreakdown(
+          employeeBreakdownResponse?.data || employeeBreakdownResponse || []
+        );
+        setQuizPerformance(quizResponse?.data || quizResponse || []);
+        setPhishingPerformance(
+          phishingResponse?.data || phishingResponse || []
+        );
+        setTrainingPerformance(
+          trainingResponse?.data || trainingResponse || []
+        );
+        setDepartmentComparison(
+          departmentComparisonResponse?.data || departmentComparisonResponse || []
+        );
         setMLPredictions(mlResponse?.data || mlResponse || {});
       } catch (err) {
         console.error("Analytics loading failed:", err);
@@ -60,6 +103,19 @@ function AnalyticsDashboard() {
 
     loadAnalytics();
   }, []);
+
+  const handleDownloadReport = () => {
+    downloadAnalyticsReport({
+      overview,
+      departmentRisk,
+      employees,
+      quizPerformance,
+      phishingPerformance,
+      trainingPerformance,
+      mlPredictions,
+      recommendations: [],
+    });
+  };
 
   if (loading) {
     return (
@@ -89,28 +145,30 @@ function AnalyticsDashboard() {
 
   return (
     <div className="analytics-page">
-      {/* Header */}
       <div className="analytics-header">
         <div>
-          <span className="analytics-eyebrow">
-            SECURITY OPERATIONS
-          </span>
-
+          <span className="analytics-eyebrow">SECURITY OPERATIONS</span>
           <h1>Security Analytics</h1>
-
           <p>
-            Monitor employee cybersecurity risk and security
-            performance from one centralized dashboard.
+            Monitor employee cybersecurity risk and security performance from one
+            centralized dashboard.
           </p>
         </div>
 
-        <div className="analytics-header-status">
-          <span className="status-dot"></span>
-          Live Analytics
+        <div className="analytics-header-actions">
+          <div className="analytics-header-status">
+            <span className="status-dot"></span>
+            Live Analytics
+          </div>
+
+          {isAdmin && (
+            <button className="analytics-report-button" onClick={handleDownloadReport}>
+              Download Report
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Statistics */}
       <div className="analytics-stats-grid">
         <StatisticsCard
           title="Total Employees"
@@ -163,7 +221,6 @@ function AnalyticsDashboard() {
         />
       </div>
 
-      {/* Charts */}
       <div className="analytics-section-title">
         <div>
           <h2>Risk Overview</h2>
@@ -176,18 +233,38 @@ function AnalyticsDashboard() {
         <DepartmentRiskChart data={departmentRisk} />
       </div>
 
-      {/* Employee Table */}
       <div className="analytics-section-title employee-section-title">
         <div>
           <h2>Employee Risk Analytics</h2>
           <p>
-            Employee-level cybersecurity risk overview and
-            assessment status.
+            Employee-level cybersecurity risk overview and assessment status.
           </p>
         </div>
       </div>
 
       <EmployeeRiskTable employees={employees} />
+
+      <div className="analytics-section-title">
+        <div>
+          <h2>Performance by Category</h2>
+          <p>Department and employee performance across awareness activities.</p>
+        </div>
+      </div>
+
+      <div className="analytics-chart-grid">
+        <QuizPerformanceChart data={quizPerformance} />
+        <PhishingPerformanceChart data={phishingPerformance} />
+      </div>
+
+      <div className="analytics-chart-grid">
+        <TrainingPerformanceChart data={trainingPerformance} />
+        <DepartmentRiskChart
+          data={departmentComparison}
+          title="Department Comparison"
+          valueKey="averageRiskScore"
+          subtitle="Department averages"
+        />
+      </div>
 
       <MLPredictionAnalytics data={mlPredictions} />
     </div>

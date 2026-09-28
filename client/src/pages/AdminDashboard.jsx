@@ -4,66 +4,69 @@ import QuickActions from "../components/dashboard/QuickActions";
 
 const AdminDashboard = () => {
   return (
-    <div>
-      <h1>Dashboard</h1>
+    <div className="admin-overview-page">
+      <section className="hero-panel">
+        <div>
+          <p className="hero-kicker">Overview</p>
+          <h1>Security posture</h1>
+          <p className="hero-subtitle">Welcome back, Admin</p>
+        </div>
 
-      <p
-        style={{
-          color: "#6B7280",
-          marginBottom: "30px",
-        }}
-      >
-        Welcome back, Admin 👋
-      </p>
+        <div className="hero-status">
+          <span className="status-indicator"></span>
+          Healthy
+        </div>
+      </section>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3,1fr)",
-          gap: "20px",
-        }}
-      >
+      <div className="stats-grid">
         <DashboardCard
           title="Employees"
           value="250"
-          color="#2563EB"
+          accent="#2563EB"
+          subtitle="Total"
         />
 
         <DashboardCard
-          title="Training Completed"
+          title="Training"
           value="180"
-          color="#10B981"
+          accent="#10B981"
+          subtitle="Completed"
         />
 
         <DashboardCard
-          title="Phishing Campaigns"
+          title="Campaigns"
           value="15"
-          color="#F59E0B"
+          accent="#F59E0B"
+          subtitle="Live"
         />
 
         <DashboardCard
-          title="Average Risk Score"
+          title="Risk"
           value="72%"
-          color="#EF4444"
+          accent="#EF4444"
+          subtitle="Average"
         />
 
         <DashboardCard
-          title="Pending Training"
+          title="Pending"
           value="64"
-          color="#8B5CF6"
+          accent="#8B5CF6"
+          subtitle="Training"
         />
 
         <DashboardCard
-          title="High Risk Employees"
+          title="High Risk"
           value="12"
-          color="#DC2626"
+          accent="#DC2626"
+          subtitle="Employees"
         />
       </div>
-      <RecentActivities />
-      <QuickActions />
-    </div>
 
-    
+      <div className="dashboard-lower-grid">
+        <RecentActivities />
+        <QuickActions />
+      </div>
+    </div>
   );
 };
 

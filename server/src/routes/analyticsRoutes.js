@@ -5,6 +5,11 @@ const {
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+  getEmployeeRiskBreakdown,
+  getQuizPerformance,
+  getPhishingPerformance,
+  getTrainingPerformance,
+  getDepartmentComparison,
   getMLPredictions,
 } = require("../controllers/analyticsController");
 
@@ -38,6 +43,41 @@ router.get(
   protect,
   authorize("admin"),
   getEmployeeRisk
+);
+
+router.get(
+  "/employee-risk-breakdown",
+  protect,
+  authorize("admin"),
+  getEmployeeRiskBreakdown
+);
+
+router.get(
+  "/quiz-performance",
+  protect,
+  authorize("admin"),
+  getQuizPerformance
+);
+
+router.get(
+  "/phishing-performance",
+  protect,
+  authorize("admin"),
+  getPhishingPerformance
+);
+
+router.get(
+  "/training-performance",
+  protect,
+  authorize("admin"),
+  getTrainingPerformance
+);
+
+router.get(
+  "/department-comparison",
+  protect,
+  authorize("admin"),
+  getDepartmentComparison
 );
 
 router.get(

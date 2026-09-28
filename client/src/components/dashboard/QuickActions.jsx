@@ -8,24 +8,18 @@ const actions = [
 
 const QuickActions = () => {
   return (
-    <section style={{ marginTop: "32px" }}>
-      <h2 style={{ marginBottom: "16px", color: "#111827" }}>Quick Actions</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" }}>
+    <section className="dashboard-panel">
+      <div className="panel-header">
+        <h2>Quick Actions</h2>
+      </div>
+
+      <div className="quick-actions-grid">
         {actions.map((action) => (
           <Link
             key={action.label}
             to={action.to}
-            style={{
-              display: "block",
-              background: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "16px",
-              padding: "18px",
-              textDecoration: "none",
-              color: action.tone,
-              fontWeight: 700,
-              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
-            }}
+            className="quick-action"
+            style={{ color: action.tone, borderColor: `${action.tone}25` }}
           >
             {action.label}
           </Link>

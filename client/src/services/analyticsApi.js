@@ -26,6 +26,26 @@ export async function getEmployeeRisk() {
   return request("/analytics/employee-risk");
 }
 
+export async function getEmployeeRiskBreakdown() {
+  return request("/analytics/employee-risk-breakdown");
+}
+
+export async function getQuizPerformance() {
+  return request("/analytics/quiz-performance");
+}
+
+export async function getPhishingPerformance() {
+  return request("/analytics/phishing-performance");
+}
+
+export async function getTrainingPerformance() {
+  return request("/analytics/training-performance");
+}
+
+export async function getDepartmentComparison() {
+  return request("/analytics/department-comparison");
+}
+
 export async function getMLPredictions() {
   return request("/analytics/ml-predictions");
 }

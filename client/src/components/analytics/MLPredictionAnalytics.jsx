@@ -1,48 +1,47 @@
 function MLPredictionAnalytics({ data = {} }) {
-  const predictions = data?.predictions ?? [];
-  const latest = data?.latestPrediction ?? data?.latest ?? null;
+  const predictions = data?.latestPredictions ?? [];
+  const modelStatus = data?.modelStatus ?? {};
+  const pending = !modelStatus?.available || predictions.length === 0;
 
   return (
     <section className="ml-analytics-section">
       <div className="analytics-section-title">
         <div>
-          <h2>ML Prediction Analytics</h2>
+          <h2>AI Prediction Results</h2>
           <p>Recent model predictions and risk scoring activity.</p>
         </div>
-        <span
-          className={`ml-status ${data?.available === false ? "is-unavailable" : "is-available"}`}
-        >
-          {data?.available === false ? "Model unavailable" : "Model available"}
+        <span className={`ml-status ${pending ? "is-unavailable" : "is-available"}`}>
+          {pending ? "Pending AI module" : "Model available"}
         </span>
       </div>
 
-      {!data || (predictions.length === 0 && !latest) ? (
+      {pending ? (
         <div className="ml-empty-state">
-          No ML prediction data available yet.
+          Pending AI module — no live prediction data is available yet.
         </div>
       ) : (
         <>
           <div className="ml-analytics-meta">
             <span>
-              Total predictions: <strong>{predictions.length || 0}</strong>
+              Total predictions: <strong>{data?.totalPredictions ?? 0}</strong>
             </span>
             <span>
-              Latest model: <strong>{data?.modelVersion || "baseline"}</strong>
+              Latest model: <strong>{modelStatus?.modelVersion ?? "unknown"}</strong>
             </span>
           </div>
 
           <div className="ml-stats-grid">
             <div>
               <span className="ml-stat-label">Low Risk</span>
-              <strong>{data?.lowRisk ?? 0}</strong>
+              <strong>{data?.lowPredictions ?? 0}</strong>
             </div>
             <div>
               <span className="ml-stat-label">Medium Risk</span>
-              <strong>{data?.mediumRisk ?? 0}</strong>
+              <strong>{data?.mediumPredictions ?? 0}</strong>
             </div>
             <div>
               <span className="ml-stat-label">High Risk</span>
-              <strong>{data?.highRisk ?? 0}</strong>
+              <strong>{data?.highPredictions ?? 0}</strong>
             </div>
             <div>
               <span className="ml-stat-label">Avg Confidence</span>
@@ -50,7 +49,7 @@ function MLPredictionAnalytics({ data = {} }) {
             </div>
             <div>
               <span className="ml-stat-label">Latest Risk</span>
-              <strong>{latest?.predictedRisk || latest?.riskLevel || "N/A"}</strong>
+              <strong>{predictions[0]?.predictedRisk ?? "N/A"}</strong>
             </div>
           </div>
         </>

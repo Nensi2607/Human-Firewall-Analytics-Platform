@@ -1,30 +1,14 @@
-const DashboardCard = ({ title, value }) => {
+const DashboardCard = ({ title, value, accent = "#2563EB", subtitle = "" }) => {
   return (
-    <div
-      style={{
-        background: "#fff",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-      }}
-    >
-      <h3
-        style={{
-          color: "#6B7280",
-          marginBottom: "10px",
-        }}
-      >
-        {title}
-      </h3>
-
-      <h1
-        style={{
-          color: "#2563EB",
-          margin: 0,
-        }}
-      >
-        {value}
-      </h1>
+    <div className="metric-card" style={{ borderTopColor: accent }}>
+      <div className="metric-card-top">
+        <div>
+          <p className="metric-card-label">{title}</p>
+          <h3 className="metric-card-value" style={{ color: accent }}>{value}</h3>
+        </div>
+        <span className="metric-card-dot" style={{ background: accent }}></span>
+      </div>
+      {subtitle && <p className="metric-card-subtitle">{subtitle}</p>}
     </div>
   );
 };

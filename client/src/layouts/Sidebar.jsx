@@ -132,13 +132,16 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="flex min-h-screen w-72 flex-col bg-slate-900 text-white shadow-xl">
-      <div className="border-b border-slate-800 px-6 py-8">
-        <h1 className="text-3xl font-bold text-blue-500">HFAP</h1>
-        <p className="mt-1 text-sm text-slate-400">Human Firewall</p>
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <div className="brand-mark">HF</div>
+        <div>
+          <h1>HFAP</h1>
+          <p>Human Firewall</p>
+        </div>
       </div>
 
-      <nav className="mt-6 flex-1 px-3">
+      <nav className="sidebar-nav">
         {menuItems.map((item) => {
           const Icon = item.icon;
 
@@ -147,25 +150,21 @@ const Sidebar = () => {
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
-                `mb-2 flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                }`
+                `nav-item ${isActive ? "nav-item-active" : ""}`
               }
             >
-              <Icon size={20} />
+              <Icon size={18} />
               <span>{item.name}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="border-t border-slate-800 p-5">
+      <div className="sidebar-footer">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-3 font-semibold transition hover:bg-red-600"
+          className="logout-button"
         >
           <LogOut size={18} />
           Logout

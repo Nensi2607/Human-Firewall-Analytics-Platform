@@ -10,29 +10,25 @@ import { Bar } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-function DepartmentRiskChart({
-  data = [],
-  title = "Department Risk",
-  valueKey = "averageRisk",
-}) {
+function PhishingPerformanceChart({ data = [] }) {
   if (!data.length) {
     return (
       <div className="analytics-panel">
         <div className="analytics-panel-header">
-          <h3>{title}</h3>
+          <h3>Phishing Click Rate</h3>
         </div>
-        <p className="analytics-empty">No department risk data available.</p>
+        <p className="analytics-empty">No phishing performance data available.</p>
       </div>
     );
   }
 
-  const labels = data.map((item) => item.department || item.name || "Department");
-  const values = data.map((item) => Number(item[valueKey] ?? item.riskScore ?? item.score ?? 0));
+  const labels = data.slice(0, 8).map((item) => item.employeeName || "Employee");
+  const values = data.slice(0, 8).map((item) => Number(item.clickRate ?? 0));
 
   return (
     <div className="analytics-panel">
       <div className="analytics-panel-header">
-        <h3>{title}</h3>
+        <h3>Phishing Click Rate</h3>
       </div>
 
       <div style={{ height: 260 }}>
@@ -41,9 +37,9 @@ function DepartmentRiskChart({
             labels,
             datasets: [
               {
-                label: title,
+                label: "Click Rate (%)",
                 data: values,
-                backgroundColor: "#7c3aed",
+                backgroundColor: "#f59e0b",
                 borderRadius: 8,
               },
             ],
@@ -68,4 +64,4 @@ function DepartmentRiskChart({
   );
 }
 
-export default DepartmentRiskChart;
+export default PhishingPerformanceChart;
