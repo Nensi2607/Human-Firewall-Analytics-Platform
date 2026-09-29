@@ -7,6 +7,8 @@ const recommendationSchema = new mongoose.Schema({
     ref: "User"
   },
 
+  riskScoreSnapshot: Number,
+
   title: String,
 
   description: String,

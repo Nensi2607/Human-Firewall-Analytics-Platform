@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   Sparkles,
   Target,
+  TrendingUp,
   Trophy,
   Users,
 } from "lucide-react";
@@ -42,6 +43,11 @@ const adminMenuItems = [
     icon: BarChart3,
   },
   {
+    name: "Leaderboard",
+    path: "/leaderboard",
+    icon: Trophy,
+  },
+  {
     name: "Recommendations",
     path: "/recommendations",
     icon: FileText,
@@ -66,6 +72,11 @@ const adminMenuItems = [
     path: "/employees",
     icon: Users,
   },
+  {
+    name: "Employee Progress",
+    path: "/employee-progress",
+    icon: TrendingUp,
+  },
 ];
 
 const employeeMenuItems = [
@@ -83,6 +94,11 @@ const employeeMenuItems = [
     name: "Training",
     path: "/training",
     icon: GraduationCap,
+  },
+  {
+    name: "My Progress",
+    path: "/my/progress",
+    icon: TrendingUp,
   },
   {
     name: "Phishing Awareness",

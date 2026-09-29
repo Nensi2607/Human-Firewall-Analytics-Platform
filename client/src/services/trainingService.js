@@ -20,3 +20,8 @@ export const completeTraining = async (trainingId) => {
 
   return response.data;
 };
+
+export const createTraining = async (training) => {
+  const response = await api.post("/training", training);
+  return response.data;
+};

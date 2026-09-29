@@ -3,7 +3,7 @@ const analyticsService = require("../services/analyticsService");
 async function getOverview(req, res) {
   try {
     const data =
-      await analyticsService.getOverview();
+      await analyticsService.getOverview(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -29,7 +29,7 @@ async function getRiskDistribution(
 ) {
   try {
     const data =
-      await analyticsService.getRiskDistribution();
+      await analyticsService.getRiskDistribution(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -55,7 +55,7 @@ async function getDepartmentRisk(
 ) {
   try {
     const data =
-      await analyticsService.getDepartmentRisk();
+      await analyticsService.getDepartmentRisk(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -81,7 +81,7 @@ async function getEmployeeRisk(
 ) {
   try {
     const data =
-      await analyticsService.getEmployeeRisk();
+      await analyticsService.getEmployeeRisk(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -103,7 +103,7 @@ async function getEmployeeRisk(
 
 async function getEmployeeRiskBreakdown(req, res) {
   try {
-    const data = await analyticsService.getEmployeeRiskBreakdown();
+    const data = await analyticsService.getEmployeeRiskBreakdown(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -120,7 +120,7 @@ async function getEmployeeRiskBreakdown(req, res) {
 
 async function getQuizPerformance(req, res) {
   try {
-    const data = await analyticsService.getQuizPerformance();
+    const data = await analyticsService.getQuizPerformance(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -137,7 +137,7 @@ async function getQuizPerformance(req, res) {
 
 async function getPhishingPerformance(req, res) {
   try {
-    const data = await analyticsService.getPhishingPerformance();
+    const data = await analyticsService.getPhishingPerformance(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -154,7 +154,7 @@ async function getPhishingPerformance(req, res) {
 
 async function getTrainingPerformance(req, res) {
   try {
-    const data = await analyticsService.getTrainingPerformance();
+    const data = await analyticsService.getTrainingPerformance(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -171,7 +171,7 @@ async function getTrainingPerformance(req, res) {
 
 async function getDepartmentComparison(req, res) {
   try {
-    const data = await analyticsService.getDepartmentComparison();
+    const data = await analyticsService.getDepartmentComparison(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -188,7 +188,7 @@ async function getDepartmentComparison(req, res) {
 
 async function getMLPredictions(req, res) {
   try {
-    const data = await analyticsService.getMLPredictions();
+    const data = await analyticsService.getMLPredictions(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
