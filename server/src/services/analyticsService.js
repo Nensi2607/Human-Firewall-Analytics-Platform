@@ -11,6 +11,11 @@ const RiskAssessment =
   getModel("RiskAssessment");
 const AIPrediction = getModel("AIPrediction");
 
+const withEmployeeScope = (pipeline, employeeIds, field = "userId") =>
+  Array.isArray(employeeIds)
+    ? [{ $match: { [field]: { $in: employeeIds } } }, ...pipeline]
+    : pipeline;
+
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
 async function getMLServiceStatus() {
@@ -40,9 +45,11 @@ async function getMLServiceStatus() {
 }
 
 
-async function getOverview() {
+async function getOverview(employeeIds) {
+  const employeeQuery = { role: "employee" };
+  if (Array.isArray(employeeIds)) employeeQuery._id = { $in: employeeIds };
   const totalEmployees = User
-    ? await User.countDocuments({ role: "employee" })
+    ? await User.countDocuments(employeeQuery)
     : 0;
 
   let highRisk = 0;
@@ -52,7 +59,7 @@ async function getOverview() {
 
   if (RiskAssessment) {
     const riskData =
-      await RiskAssessment.aggregate([
+      await RiskAssessment.aggregate(withEmployeeScope([
         {
           $group: {
             _id: null,
@@ -116,7 +123,7 @@ async function getOverview() {
             },
           },
         },
-      ]);
+      ], employeeIds));
 
     if (riskData.length > 0) {
       highRisk = riskData[0].highRisk || 0;
@@ -144,12 +151,12 @@ async function getOverview() {
   };
 }
 
-async function getRiskDistribution() {
+async function getRiskDistribution(employeeIds) {
   if (!RiskAssessment) {
     return [];
   }
 
-  return RiskAssessment.aggregate([
+  return RiskAssessment.aggregate(withEmployeeScope([
     {
       $group: {
         _id: "$riskLevel",
@@ -165,15 +172,15 @@ async function getRiskDistribution() {
         count: 1,
       },
     },
-  ]);
+  ], employeeIds));
 }
 
-async function getDepartmentRisk() {
+async function getDepartmentRisk(employeeIds) {
   if (!RiskAssessment) {
     return [];
   }
 
-  return RiskAssessment.aggregate([
+  return RiskAssessment.aggregate(withEmployeeScope([
     {
       $lookup: {
         from: "users",
@@ -233,15 +240,15 @@ async function getDepartmentRisk() {
         averageRisk: -1,
       },
     },
-  ]);
+  ], employeeIds));
 }
 
-async function getEmployeeRisk() {
+async function getEmployeeRisk(employeeIds) {
   if (!RiskAssessment) {
     return [];
   }
 
-  return RiskAssessment.aggregate([
+  return RiskAssessment.aggregate(withEmployeeScope([
     {
       $sort: {
         finalRiskScore: -1,
@@ -291,10 +298,447 @@ async function getEmployeeRisk() {
         },
       },
     },
-  ]);
+  ], employeeIds));
 }
 
+<<<<<<< Updated upstream
 async function getMLPredictions() {
+=======
+async function getEmployeeRiskBreakdown(employeeIds) {
+  if (!RiskAssessment) {
+    return [];
+  }
+
+  return RiskAssessment.aggregate(withEmployeeScope([
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.role": "employee" } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        employeeId: "$user._id",
+        employeeName: {
+          $concat: ["$user.firstName", " ", "$user.lastName"],
+        },
+        department: {
+          $ifNull: ["$department.departmentName", "Unassigned"],
+        },
+        finalRiskScore: 1,
+        riskLevel: 1,
+        quizScore: { $ifNull: ["$quizScore", 0] },
+        phishingScore: { $ifNull: ["$phishingScore", 0] },
+        trainingScore: { $ifNull: ["$trainingScore", 0] },
+        securityAwarenessScore: {
+          $ifNull: ["$securityAwarenessScore", 0],
+        },
+        assessedAt: { $ifNull: ["$assessedAt", "$updatedAt"] },
+      },
+    },
+    {
+      $sort: {
+        finalRiskScore: -1,
+        employeeName: 1,
+      },
+    },
+  ], employeeIds));
+}
+
+async function getQuizPerformance(employeeIds) {
+  if (!QuizResult) {
+    return [];
+  }
+
+  return QuizResult.aggregate(withEmployeeScope([
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.role": "employee" } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $set: {
+        quizPercentage: {
+          $ifNull: [
+            "$percentage",
+            {
+              $cond: [
+                { $gt: ["$totalQuestions", 0] },
+                {
+                  $multiply: [
+                    { $divide: ["$correctAnswers", "$totalQuestions"] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$userId",
+        employeeId: { $first: "$user._id" },
+        employeeName: {
+          $first: {
+            $concat: ["$user.firstName", " ", "$user.lastName"],
+          },
+        },
+        department: {
+          $first: { $ifNull: ["$department.departmentName", "Unassigned"] },
+        },
+        totalAttempts: { $sum: 1 },
+        averagePercentage: {
+          $avg: "$quizPercentage",
+        },
+        averageScore: {
+          $avg: { $ifNull: ["$score", 0] },
+        },
+        bestScore: { $max: { $ifNull: ["$score", 0] } },
+        lastSubmitted: { $max: { $ifNull: ["$submittedAt", "$completedAt"] } },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        employeeId: 1,
+        employeeName: 1,
+        department: 1,
+        totalAttempts: 1,
+        averagePercentage: { $round: ["$averagePercentage", 2] },
+        averageScore: { $round: ["$averageScore", 2] },
+        bestScore: 1,
+        lastSubmitted: 1,
+      },
+    },
+    {
+      $sort: {
+        averagePercentage: -1,
+        bestScore: -1,
+      },
+    },
+  ], employeeIds));
+}
+
+async function getPhishingPerformance(employeeIds) {
+  if (!PhishingAttempt) {
+    return [];
+  }
+
+  return PhishingAttempt.aggregate(withEmployeeScope([
+    {
+      $lookup: {
+        from: "users",
+        localField: "employeeId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: "$employeeId",
+        employeeId: { $first: "$employeeId" },
+        employeeName: {
+          $first: {
+            $concat: [
+              { $ifNull: ["$user.firstName", "Unknown"] },
+              " ",
+              { $ifNull: ["$user.lastName", "User"] },
+            ],
+          },
+        },
+        department: {
+          $first: { $ifNull: ["$department.departmentName", "Unassigned"] },
+        },
+        totalAttempts: { $sum: 1 },
+        clickedCount: {
+          $sum: { $cond: [{ $eq: ["$clicked", true] }, 1, 0] },
+        },
+        reportedCount: {
+          $sum: { $cond: [{ $eq: ["$reported", true] }, 1, 0] },
+        },
+        linkClickedCount: {
+          $sum: { $cond: [{ $eq: ["$linkClicked", true] }, 1, 0] },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        employeeId: 1,
+        employeeName: 1,
+        department: 1,
+        totalAttempts: 1,
+        clickedCount: 1,
+        reportedCount: 1,
+        linkClickedCount: 1,
+        clickRate: {
+          $round: [
+            {
+              $multiply: [
+                { $divide: ["$clickedCount", { $max: ["$totalAttempts", 1] }] },
+                100,
+              ],
+            },
+            2,
+          ],
+        },
+        reportedRate: {
+          $round: [
+            {
+              $multiply: [
+                { $divide: ["$reportedCount", { $max: ["$totalAttempts", 1] }] },
+                100,
+              ],
+            },
+            2,
+          ],
+        },
+        linkClickRate: {
+          $round: [
+            {
+              $multiply: [
+                { $divide: ["$linkClickedCount", { $max: ["$totalAttempts", 1] }] },
+                100,
+              ],
+            },
+            2,
+          ],
+        },
+      },
+    },
+    {
+      $sort: {
+        clickRate: 1,
+        employeeName: 1,
+      },
+    },
+  ], employeeIds, "employeeId"));
+}
+
+async function getTrainingPerformance(employeeIds) {
+  if (!TrainingProgress) {
+    return [];
+  }
+
+  return TrainingProgress.aggregate(withEmployeeScope([
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.role": "employee" } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: "$userId",
+        employeeId: { $first: "$user._id" },
+        employeeName: {
+          $first: {
+            $concat: ["$user.firstName", " ", "$user.lastName"],
+          },
+        },
+        department: {
+          $first: { $ifNull: ["$department.departmentName", "Unassigned"] },
+        },
+        totalModules: { $sum: 1 },
+        completedModules: {
+          $sum: { $cond: [{ $eq: ["$completed", true] }, 1, 0] },
+        },
+        averageProgress: {
+          $avg: { $ifNull: ["$progress", 0] },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        employeeId: 1,
+        employeeName: 1,
+        department: 1,
+        totalModules: 1,
+        completedModules: 1,
+        averageProgress: { $round: ["$averageProgress", 2] },
+        completionRate: {
+          $round: [
+            {
+              $multiply: [
+                { $divide: ["$completedModules", { $max: ["$totalModules", 1] }] },
+                100,
+              ],
+            },
+            2,
+          ],
+        },
+      },
+    },
+    {
+      $sort: {
+        completionRate: -1,
+        averageProgress: -1,
+      },
+    },
+  ], employeeIds));
+}
+
+async function getDepartmentComparison(employeeIds) {
+  if (!RiskAssessment) {
+    return [];
+  }
+
+  return RiskAssessment.aggregate(withEmployeeScope([
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.role": "employee" } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "user.departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: { $ifNull: ["$department.departmentName", "Unassigned"] },
+        employeeCount: { $sum: 1 },
+        averageRiskScore: {
+          $avg: { $ifNull: ["$finalRiskScore", 0] },
+        },
+        averageQuizScore: {
+          $avg: { $ifNull: ["$quizScore", 0] },
+        },
+        averagePhishingScore: {
+          $avg: { $ifNull: ["$phishingScore", 0] },
+        },
+        averageTrainingScore: {
+          $avg: { $ifNull: ["$trainingScore", 0] },
+        },
+        averageAwarenessScore: {
+          $avg: { $ifNull: ["$securityAwarenessScore", 0] },
+        },
+        highRisk: {
+          $sum: { $cond: [{ $eq: [{ $toLower: "$riskLevel" }, "high"] }, 1, 0] },
+        },
+        mediumRisk: {
+          $sum: { $cond: [{ $eq: [{ $toLower: "$riskLevel" }, "medium"] }, 1, 0] },
+        },
+        lowRisk: {
+          $sum: { $cond: [{ $eq: [{ $toLower: "$riskLevel" }, "low"] }, 1, 0] },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        department: "$_id",
+        employeeCount: 1,
+        averageRiskScore: { $round: ["$averageRiskScore", 2] },
+        averageQuizScore: { $round: ["$averageQuizScore", 2] },
+        averagePhishingScore: { $round: ["$averagePhishingScore", 2] },
+        averageTrainingScore: { $round: ["$averageTrainingScore", 2] },
+        averageAwarenessScore: { $round: ["$averageAwarenessScore", 2] },
+        highRisk: 1,
+        mediumRisk: 1,
+        lowRisk: 1,
+      },
+    },
+    {
+      $sort: {
+        averageRiskScore: -1,
+        employeeCount: -1,
+      },
+    },
+  ], employeeIds));
+}
+
+async function getMLPredictions(employeeIds) {
+>>>>>>> Stashed changes
   const modelStatus = await getMLServiceStatus();
 
   if (!AIPrediction) {
@@ -309,7 +753,7 @@ async function getMLPredictions() {
     };
   }
 
-  const [summary] = await AIPrediction.aggregate([
+  const [summary] = await AIPrediction.aggregate(withEmployeeScope([
     {
       $group: {
         _id: null,
@@ -326,9 +770,9 @@ async function getMLPredictions() {
         averageConfidence: { $avg: "$confidence" },
       },
     },
-  ]);
+  ], employeeIds));
 
-  const latestPredictions = await AIPrediction.aggregate([
+  const latestPredictions = await AIPrediction.aggregate(withEmployeeScope([
     { $sort: { generatedAt: -1, _id: -1 } },
     { $limit: 10 },
     {
@@ -360,7 +804,7 @@ async function getMLPredictions() {
         generatedAt: 1,
       },
     },
-  ]);
+  ], employeeIds));
 
   return {
     modelStatus,

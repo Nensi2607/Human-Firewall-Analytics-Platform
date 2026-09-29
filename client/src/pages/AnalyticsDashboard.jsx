@@ -5,25 +5,83 @@ import RiskDistributionChart from "../components/analytics/RiskDistributionChart
 import DepartmentRiskChart from "../components/analytics/DepartmentRiskChart";
 import EmployeeRiskTable from "../components/analytics/EmployeeRiskTable";
 import MLPredictionAnalytics from "../components/analytics/MLPredictionAnalytics";
+<<<<<<< Updated upstream
+=======
+import QuizPerformanceChart from "../components/analytics/QuizPerformanceChart";
+import PhishingPerformanceChart from "../components/analytics/PhishingPerformanceChart";
+import TrainingPerformanceChart from "../components/analytics/TrainingPerformanceChart";
+import { getDepartments } from "../services/adminDirectoryService";
+>>>>>>> Stashed changes
 
 import {
   getAnalyticsOverview,
   getRiskDistribution,
   getDepartmentRisk,
   getEmployeeRisk,
+<<<<<<< Updated upstream
+=======
+  getQuizPerformance,
+  getPhishingPerformance,
+  getTrainingPerformance,
+  getDepartmentComparison,
+>>>>>>> Stashed changes
   getMLPredictions,
 } from "../services/analyticsApi";
 
 function AnalyticsDashboard() {
+  const emptyFilters = {
+    employee: "",
+    departmentId: "",
+    riskLevel: "",
+    minQuizPercentage: "",
+    maxQuizPercentage: "",
+    trainingStatus: "",
+    phishingResult: "",
+  };
   const [overview, setOverview] = useState({});
   const [riskDistribution, setRiskDistribution] = useState([]);
   const [departmentRisk, setDepartmentRisk] = useState([]);
   const [employees, setEmployees] = useState([]);
+<<<<<<< Updated upstream
   const [mlPredictions, setMLPredictions] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+=======
+  const [quizPerformance, setQuizPerformance] = useState([]);
+  const [phishingPerformance, setPhishingPerformance] = useState([]);
+  const [trainingPerformance, setTrainingPerformance] = useState([]);
+  const [departmentComparison, setDepartmentComparison] = useState([]);
+  const [mlPredictions, setMLPredictions] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isAdmin] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null")?.role === "admin";
+    } catch {
+      return false;
+    }
+  });
+  const [departments, setDepartments] = useState([]);
+  const [filterDraft, setFilterDraft] = useState(emptyFilters);
+  const [appliedFilters, setAppliedFilters] = useState({});
 
   useEffect(() => {
+    let isActive = true;
+    void getDepartments()
+      .then((response) => {
+        if (isActive) setDepartments(response);
+      })
+      .catch(() => {
+        if (isActive) setDepartments([]);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
+>>>>>>> Stashed changes
+
+  useEffect(() => {
+    let isActive = true;
     async function loadAnalytics() {
       try {
         setLoading(true);
@@ -34,6 +92,7 @@ function AnalyticsDashboard() {
           riskResponse,
           departmentResponse,
           employeeResponse,
+<<<<<<< Updated upstream
           mlResponse,
         ] = await Promise.all([
           getAnalyticsOverview(),
@@ -41,7 +100,26 @@ function AnalyticsDashboard() {
           getDepartmentRisk(),
           getEmployeeRisk(),
           getMLPredictions(),
+=======
+          quizResponse,
+          phishingResponse,
+          trainingResponse,
+          departmentComparisonResponse,
+          mlResponse,
+        ] = await Promise.all([
+          getAnalyticsOverview(appliedFilters),
+          getRiskDistribution(appliedFilters),
+          getDepartmentRisk(appliedFilters),
+          getEmployeeRisk(appliedFilters),
+          getQuizPerformance(appliedFilters),
+          getPhishingPerformance(appliedFilters),
+          getTrainingPerformance(appliedFilters),
+          getDepartmentComparison(appliedFilters),
+          getMLPredictions(appliedFilters),
+>>>>>>> Stashed changes
         ]);
+
+        if (!isActive) return;
 
         setOverview(overviewResponse?.data || overviewResponse || {});
         setRiskDistribution(riskResponse?.data || riskResponse || []);
@@ -49,17 +127,50 @@ function AnalyticsDashboard() {
           departmentResponse?.data || departmentResponse || []
         );
         setEmployees(employeeResponse?.data || employeeResponse || []);
+<<<<<<< Updated upstream
+=======
+        setQuizPerformance(quizResponse?.data || quizResponse || []);
+        setPhishingPerformance(
+          phishingResponse?.data || phishingResponse || []
+        );
+        setTrainingPerformance(
+          trainingResponse?.data || trainingResponse || []
+        );
+        setDepartmentComparison(
+          departmentComparisonResponse?.data || departmentComparisonResponse || []
+        );
+>>>>>>> Stashed changes
         setMLPredictions(mlResponse?.data || mlResponse || {});
       } catch (err) {
         console.error("Analytics loading failed:", err);
-        setError("Unable to load analytics data.");
+        if (isActive) setError("Unable to load analytics data.");
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     }
 
     loadAnalytics();
-  }, []);
+    return () => {
+      isActive = false;
+    };
+  }, [appliedFilters]);
+
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    setFilterDraft((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleApplyFilters = (event) => {
+    event.preventDefault();
+    setAppliedFilters(Object.fromEntries(
+      Object.entries(filterDraft).filter(([, value]) => value !== "")
+    ));
+  };
+
+  const handleResetFilters = () => {
+    setFilterDraft(emptyFilters);
+    setAppliedFilters({});
+  };
 
   if (loading) {
     return (
@@ -110,7 +221,74 @@ function AnalyticsDashboard() {
         </div>
       </div>
 
+<<<<<<< Updated upstream
       {/* Statistics */}
+=======
+      <form
+        onSubmit={handleApplyFilters}
+        className="mb-6 grid gap-4 border-y border-slate-200 py-5 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        <label className="text-sm font-semibold text-slate-700">
+          Employee
+          <input
+            name="employee"
+            type="search"
+            value={filterDraft.employee}
+            onChange={handleFilterChange}
+            placeholder="Name or email"
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+          />
+        </label>
+        <label className="text-sm font-semibold text-slate-700">
+          Department
+          <select name="departmentId" value={filterDraft.departmentId} onChange={handleFilterChange} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
+            <option value="">All departments</option>
+            {departments.map((department) => <option key={department._id} value={department._id}>{department.departmentName}</option>)}
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-700">
+          Risk level
+          <select name="riskLevel" value={filterDraft.riskLevel} onChange={handleFilterChange} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
+            <option value="">All risk levels</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </label>
+        <fieldset className="text-sm font-semibold text-slate-700">
+          <legend>Average quiz score (%)</legend>
+          <div className="mt-1 flex items-center gap-2">
+            <input name="minQuizPercentage" type="number" min="0" max="100" value={filterDraft.minQuizPercentage} onChange={handleFilterChange} placeholder="Min" aria-label="Minimum average quiz score" className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" />
+            <span aria-hidden="true">to</span>
+            <input name="maxQuizPercentage" type="number" min="0" max="100" value={filterDraft.maxQuizPercentage} onChange={handleFilterChange} placeholder="Max" aria-label="Maximum average quiz score" className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" />
+          </div>
+        </fieldset>
+        <label className="text-sm font-semibold text-slate-700">
+          Training status
+          <select name="trainingStatus" value={filterDraft.trainingStatus} onChange={handleFilterChange} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
+            <option value="">All training statuses</option>
+            <option value="completed">Completed all</option>
+            <option value="in-progress">In progress</option>
+            <option value="not-started">Not started</option>
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-700">
+          Phishing result
+          <select name="phishingResult" value={filterDraft.phishingResult} onChange={handleFilterChange} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
+            <option value="">All results</option>
+            <option value="clicked">Clicked or entered credentials</option>
+            <option value="reported">Reported</option>
+            <option value="no-click">Attempted, no click</option>
+            <option value="no-attempt">No simulation attempt</option>
+          </select>
+        </label>
+        <div className="flex items-end gap-2 lg:col-span-2">
+          <button type="submit" className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800">Apply filters</button>
+          <button type="button" onClick={handleResetFilters} className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50">Reset</button>
+        </div>
+      </form>
+
+>>>>>>> Stashed changes
       <div className="analytics-stats-grid">
         <StatisticsCard
           title="Total Employees"

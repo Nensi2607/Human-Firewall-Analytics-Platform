@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { Bell, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getNotifications } from "../services/notificationService";
 
 const getCurrentUser = () => {
   try {
@@ -9,12 +12,33 @@ const getCurrentUser = () => {
 };
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
   const currentUser = getCurrentUser();
   const role = (currentUser?.role || "Employee").toString();
   const initials = `${currentUser?.firstName?.[0] || "U"}${currentUser?.lastName?.[0] || ""}`.toUpperCase();
   const fullName = currentUser
     ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
     : "User";
+
+  useEffect(() => {
+    let isActive = true;
+    const refreshUnreadCount = async () => {
+      try {
+        const response = await getNotifications();
+        if (isActive) setUnreadCount(response.unreadCount || 0);
+      } catch {
+        if (isActive) setUnreadCount(0);
+      }
+    };
+
+    void refreshUnreadCount();
+    const intervalId = window.setInterval(refreshUnreadCount, 30000);
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <header className="flex h-20 items-center justify-between border-b border-gray-200 bg-white px-8 shadow-sm">
@@ -33,9 +57,21 @@ const Navbar = () => {
           />
         </div>
 
+<<<<<<< Updated upstream
         <button type="button" className="relative rounded-full p-2 transition hover:bg-gray-100">
           <Bell className="text-gray-700" size={22} />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
+=======
+        <button
+          type="button"
+          className="notification-button"
+          aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+          title="Notifications"
+          onClick={() => navigate(currentUser?.role === "admin" ? "/notifications" : "/my/notifications")}
+        >
+          <Bell size={18} />
+          {unreadCount > 0 && <span className="notification-count">{unreadCount > 99 ? "99+" : unreadCount}</span>}
+>>>>>>> Stashed changes
         </button>
 
         <div className="flex items-center gap-3">

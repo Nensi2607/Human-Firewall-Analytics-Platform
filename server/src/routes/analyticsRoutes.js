@@ -9,41 +9,62 @@ const {
 } = require("../controllers/analyticsController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
+const { analyticsFilterMiddleware } = require("../middleware/analyticsFilterMiddleware");
 
 const router = express.Router();
 
+router.use(protect, authorize("admin"), analyticsFilterMiddleware);
+
 router.get(
   "/overview",
-  protect,
-  authorize("admin"),
   getOverview
 );
 
 router.get(
   "/risk-distribution",
-  protect,
-  authorize("admin"),
   getRiskDistribution
 );
 
 router.get(
   "/department-risk",
-  protect,
-  authorize("admin"),
   getDepartmentRisk
 );
 
 router.get(
   "/employee-risk",
-  protect,
-  authorize("admin"),
   getEmployeeRisk
 );
 
 router.get(
+<<<<<<< Updated upstream
+=======
+  "/employee-risk-breakdown",
+  getEmployeeRiskBreakdown
+);
+
+router.get(
+  "/quiz-performance",
+  getQuizPerformance
+);
+
+router.get(
+  "/phishing-performance",
+  getPhishingPerformance
+);
+
+router.get(
+  "/training-performance",
+  getTrainingPerformance
+);
+
+router.get(
+  "/department-comparison",
+  getDepartmentComparison
+);
+
+router.get(
+>>>>>>> Stashed changes
   "/ml-predictions",
-  protect,
-  authorize("admin"),
   getMLPredictions
 );
 

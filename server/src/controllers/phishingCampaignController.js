@@ -5,6 +5,7 @@ const PhishingAttempt = require("../models/PhishingAttempt");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const { sendPhishingEmail } = require("../services/emailService");
+const { createUserNotification } = require("../services/notificationService");
 
 const getTrackingBaseUrl = () =>
 	process.env.PHISHING_TRACKING_URL ||
@@ -197,6 +198,12 @@ exports.launchCampaign = async (req, res, next) => {
 
 		campaign.status = "completed";
 		await campaign.save();
+		await createUserNotification({
+			userId: req.user._id,
+			title: "Phishing campaign launched",
+			message: `${campaign.title} was sent to ${sentCount} employee${sentCount === 1 ? "" : "s"}.`,
+			type: "success",
+		});
 
 		return res.status(200).json({
 			success: true,

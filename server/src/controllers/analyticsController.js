@@ -3,7 +3,7 @@ const analyticsService = require("../services/analyticsService");
 async function getOverview(req, res) {
   try {
     const data =
-      await analyticsService.getOverview();
+      await analyticsService.getOverview(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -29,7 +29,7 @@ async function getRiskDistribution(
 ) {
   try {
     const data =
-      await analyticsService.getRiskDistribution();
+      await analyticsService.getRiskDistribution(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -55,7 +55,7 @@ async function getDepartmentRisk(
 ) {
   try {
     const data =
-      await analyticsService.getDepartmentRisk();
+      await analyticsService.getDepartmentRisk(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -81,7 +81,7 @@ async function getEmployeeRisk(
 ) {
   try {
     const data =
-      await analyticsService.getEmployeeRisk();
+      await analyticsService.getEmployeeRisk(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,
@@ -101,9 +101,97 @@ async function getEmployeeRisk(
   }
 }
 
+<<<<<<< Updated upstream
+=======
+async function getEmployeeRiskBreakdown(req, res) {
+  try {
+    const data = await analyticsService.getEmployeeRiskBreakdown(req.analyticsEmployeeIds);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Employee risk breakdown error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee risk breakdown",
+    });
+  }
+}
+
+async function getQuizPerformance(req, res) {
+  try {
+    const data = await analyticsService.getQuizPerformance(req.analyticsEmployeeIds);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Quiz performance error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch quiz performance",
+    });
+  }
+}
+
+async function getPhishingPerformance(req, res) {
+  try {
+    const data = await analyticsService.getPhishingPerformance(req.analyticsEmployeeIds);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Phishing performance error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch phishing performance",
+    });
+  }
+}
+
+async function getTrainingPerformance(req, res) {
+  try {
+    const data = await analyticsService.getTrainingPerformance(req.analyticsEmployeeIds);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Training performance error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch training performance",
+    });
+  }
+}
+
+async function getDepartmentComparison(req, res) {
+  try {
+    const data = await analyticsService.getDepartmentComparison(req.analyticsEmployeeIds);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Department comparison error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch department comparison",
+    });
+  }
+}
+
+>>>>>>> Stashed changes
 async function getMLPredictions(req, res) {
   try {
-    const data = await analyticsService.getMLPredictions();
+    const data = await analyticsService.getMLPredictions(req.analyticsEmployeeIds);
 
     res.status(200).json({
       success: true,

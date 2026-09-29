@@ -2,6 +2,7 @@ const Quiz = require("../models/Quiz");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const mongoose = require("mongoose");
+const { createNotificationsForUsers } = require("../services/notificationService");
 const allowedFields = [
 	"title",
 	"description",
@@ -144,6 +145,26 @@ exports.createQuiz = async (req, res, next) => {
 			...input,
 			createdBy: req.user._id,
 		});
+		const recipientQuery = input.targetAll
+			? { role: "employee", status: "active" }
+			: {
+				role: "employee",
+				status: "active",
+				$or: [
+					{ _id: { $in: input.targetUsers || [] } },
+					{ departmentId: { $in: input.targetDepartments || [] } },
+				],
+			};
+		const recipients = await User.find(recipientQuery).select("_id").lean();
+
+		await createNotificationsForUsers(
+			recipients.map((recipient) => recipient._id),
+			{
+				title: "New quiz assigned",
+				message: `${quiz.title} is ready for you to complete.`,
+				type: "info",
+			}
+		);
 
 		res.status(201).json({
 			success: true,

@@ -16,6 +16,10 @@ import Phishing from "../pages/Phishing";
 import PhishingAwarenessLanding from "../pages/PhishingAwarenessLanding";
 import AdminQuizManagement from "../pages/AdminQuizManagement";
 import AdminPhishingCampaigns from "../pages/AdminPhishingCampaigns";
+import AdminTrainingManagement from "../pages/AdminTrainingManagement";
+import NotificationInbox from "../pages/NotificationInbox";
+import EmployeeProgress from "../pages/EmployeeProgress";
+import Leaderboard from "../pages/Leaderboard";
 
 const getStoredUser = () => {
   try {
@@ -73,18 +77,15 @@ const AppRoutes = () => {
             />
             <Route
               path="/admin/training"
-              element={
-                <PlaceholderPage
-                  title="Training Management"
-                  description="Create, manage, and assign organization training content."
-                />
-              }
+              element={<AdminTrainingManagement />}
             />
             <Route
               path="/admin/phishing"
               element={<AdminPhishingCampaigns />}
             />
             <Route path="/analytics" element={<AnalyticsDashboard />} />
+            <Route path="/employee-progress" element={<EmployeeProgress />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route
               path="/recommendations"
               element={
@@ -96,12 +97,7 @@ const AppRoutes = () => {
             />
             <Route
               path="/notifications"
-              element={
-                <PlaceholderPage
-                  title="Organization Notifications"
-                  description="Manage compliance alerts, system notices, and employee communications."
-                />
-              }
+              element={<NotificationInbox />}
             />
             <Route
               path="/reports"
@@ -134,6 +130,7 @@ const AppRoutes = () => {
 
           <Route element={<RoleRoute roles={["employee"]} />}>
             <Route path="/employee" element={<EmployeeDashboard />} />
+            <Route path="/my/progress" element={<EmployeeProgress />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/quiz/:quizId" element={<Quiz />} />
             <Route path="/training" element={<Training />} />
@@ -159,22 +156,9 @@ const AppRoutes = () => {
             />
             <Route
               path="/my/notifications"
-              element={
-                <PlaceholderPage
-                  title="My Notifications"
-                  description="Review notifications addressed to you."
-                />
-              }
+              element={<NotificationInbox />}
             />
-            <Route
-              path="/leaderboard"
-              element={
-                <PlaceholderPage
-                  title="Leaderboard"
-                  description="View relative security-awareness rankings without private employee details."
-                />
-              }
-            />
+            <Route path="/leaderboard" element={<Leaderboard />} />
           </Route>
         </Route>
       </Route>
