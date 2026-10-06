@@ -69,9 +69,9 @@ const Leaderboard = () => {
       </header>
 
       <section className="mb-6 border-l-4 border-amber-400 bg-amber-50 px-4 py-3">
-        <h2 className="text-sm font-bold text-amber-950">Placeholder ranking formula</h2>
+        <h2 className="text-sm font-bold text-amber-950">Prototype learning score</h2>
         <p className="mt-1 text-sm text-amber-900">
-          (average quiz percentage + training completion percentage) / 2. Pending a final team decision.
+          This score averages quiz results and training completion. It ranks learning activity only and is not a human risk score.
         </p>
       </section>
 
@@ -100,7 +100,7 @@ const Leaderboard = () => {
                   <th scope="col" className="px-3 py-3">Department</th>
                   <th scope="col" className="px-3 py-3 text-right">Quiz average</th>
                   <th scope="col" className="px-3 py-3 text-right">Training</th>
-                  <th scope="col" className="px-3 py-3 text-right">Placeholder score</th>
+                  <th scope="col" className="px-3 py-3 text-right">Learning score</th>
                 </tr>
               </thead>
               <tbody>

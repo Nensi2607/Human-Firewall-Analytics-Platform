@@ -1,8 +1,41 @@
 import DashboardCard from "../components/DashboardCard";
 import RecentActivities from "../components/dashboard/RecentActivities";
 import QuickActions from "../components/dashboard/QuickActions";
+import { useEffect, useState } from "react";
+import { getAdminDashboard } from "../services/dashboardService";
 
 const AdminDashboard = () => {
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadDashboard = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await getAdminDashboard();
+        if (isActive) setDashboard(response.data);
+      } catch {
+        if (isActive) {
+          setDashboard(null);
+          setError("Unable to load organization metrics.");
+        }
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    void loadDashboard();
+    return () => {
+      isActive = false;
+    };
+  }, [retryCount]);
+
   return (
     <div className="admin-overview-page">
       <section className="hero-panel">
@@ -14,49 +47,64 @@ const AdminDashboard = () => {
 
         <div className="hero-status">
           <span className="status-indicator"></span>
-          Healthy
+          Database snapshot
         </div>
       </section>
 
+      {loading ? (
+        <p role="status" className="dashboard-state">Loading organization metrics...</p>
+      ) : error ? (
+        <div className="state-card error-card" role="alert">
+          <h3>{error}</h3>
+          <button
+            type="button"
+            onClick={() => setRetryCount((count) => count + 1)}
+            className="retry-button"
+          >
+            Retry
+          </button>
+        </div>
+      ) : dashboard ? (
+      <>
       <div className="stats-grid">
         <DashboardCard
           title="Employees"
-          value="250"
+          value={dashboard?.totalEmployees ?? "N/A"}
           accent="#2563EB"
           subtitle="Total"
         />
 
         <DashboardCard
           title="Training"
-          value="180"
+          value={dashboard?.completedTrainings ?? "N/A"}
           accent="#10B981"
           subtitle="Completed"
         />
 
         <DashboardCard
           title="Campaigns"
-          value="15"
+          value={dashboard?.campaignCount ?? "N/A"}
           accent="#F59E0B"
-          subtitle="Live"
+          subtitle="Created"
         />
 
         <DashboardCard
           title="Risk"
-          value="72%"
+          value={dashboard?.averageRiskScore == null ? "N/A" : `${dashboard.averageRiskScore}%`}
           accent="#EF4444"
           subtitle="Average"
         />
 
         <DashboardCard
           title="Pending"
-          value="64"
+          value={dashboard?.pendingTrainings ?? "N/A"}
           accent="#8B5CF6"
           subtitle="Training"
         />
 
         <DashboardCard
           title="High Risk"
-          value="12"
+          value={dashboard?.highRiskEmployees ?? "N/A"}
           accent="#DC2626"
           subtitle="Employees"
         />
@@ -66,6 +114,10 @@ const AdminDashboard = () => {
         <RecentActivities />
         <QuickActions />
       </div>
+      </>
+      ) : (
+        <p className="dashboard-state">No organization metrics are available.</p>
+      )}
     </div>
   );
 };

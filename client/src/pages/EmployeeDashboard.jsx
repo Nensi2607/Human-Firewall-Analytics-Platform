@@ -68,7 +68,6 @@ const EmployeeDashboard = () => {
   const phishingAwareness = dashboard?.phishingAwareness;
   const finalRiskScore = dashboard?.finalRiskScore ?? dashboard?.riskScore;
   const riskLevel = dashboard?.riskLevel;
-  const securityAwarenessScore = dashboard?.securityAwarenessScore;
   const trainingTotal =
     typeof completedTrainings === "number" &&
     typeof pendingTrainings === "number"

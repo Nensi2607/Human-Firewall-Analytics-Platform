@@ -364,12 +364,12 @@ async function getEmployeeRiskBreakdown() {
   ]);
 }
 
-async function getQuizPerformance() {
+async function getQuizPerformance(employeeIds) {
   if (!QuizResult) {
     return [];
   }
 
-  return QuizResult.aggregate([
+  return QuizResult.aggregate(withEmployeeScope([
     {
       $lookup: {
         from: "users",
@@ -436,15 +436,15 @@ async function getQuizPerformance() {
         bestScore: -1,
       },
     },
-  ]);
+  ], employeeIds));
 }
 
-async function getPhishingPerformance() {
+async function getPhishingPerformance(employeeIds) {
   if (!PhishingAttempt) {
     return [];
   }
 
-  return PhishingAttempt.aggregate([
+  return PhishingAttempt.aggregate(withEmployeeScope([
     {
       $lookup: {
         from: "users",
@@ -547,15 +547,15 @@ async function getPhishingPerformance() {
         employeeName: 1,
       },
     },
-  ]);
+  ], employeeIds, "employeeId"));
 }
 
-async function getTrainingPerformance() {
+async function getTrainingPerformance(employeeIds) {
   if (!TrainingProgress) {
     return [];
   }
 
-  return TrainingProgress.aggregate([
+  return TrainingProgress.aggregate(withEmployeeScope([
     {
       $lookup: {
         from: "users",
@@ -629,15 +629,15 @@ async function getTrainingPerformance() {
         averageProgress: -1,
       },
     },
-  ]);
+  ], employeeIds));
 }
 
-async function getDepartmentComparison() {
+async function getDepartmentComparison(employeeIds) {
   if (!RiskAssessment) {
     return [];
   }
 
-  return RiskAssessment.aggregate([
+  return RiskAssessment.aggregate(withEmployeeScope([
     {
       $lookup: {
         from: "users",
@@ -667,19 +667,19 @@ async function getDepartmentComparison() {
         _id: { $ifNull: ["$department.departmentName", "Unassigned"] },
         employeeCount: { $sum: 1 },
         averageRiskScore: {
-          $avg: { $ifNull: ["$finalRiskScore", 0] },
+          $avg: "$finalRiskScore",
         },
         averageQuizScore: {
-          $avg: { $ifNull: ["$quizScore", 0] },
+          $avg: "$quizScore",
         },
         averagePhishingScore: {
-          $avg: { $ifNull: ["$phishingScore", 0] },
+          $avg: "$phishingScore",
         },
         averageTrainingScore: {
-          $avg: { $ifNull: ["$trainingScore", 0] },
+          $avg: "$trainingScore",
         },
         averageAwarenessScore: {
-          $avg: { $ifNull: ["$securityAwarenessScore", 0] },
+          $avg: "$securityAwarenessScore",
         },
         highRisk: {
           $sum: { $cond: [{ $eq: [{ $toLower: "$riskLevel" }, "high"] }, 1, 0] },
@@ -713,7 +713,7 @@ async function getDepartmentComparison() {
         employeeCount: -1,
       },
     },
-  ]);
+  ], employeeIds));
 }
 
 async function getEmployeeRiskBreakdown(employeeIds) {
@@ -1100,19 +1100,19 @@ async function getDepartmentComparison(employeeIds) {
         _id: { $ifNull: ["$department.departmentName", "Unassigned"] },
         employeeCount: { $sum: 1 },
         averageRiskScore: {
-          $avg: { $ifNull: ["$finalRiskScore", 0] },
+          $avg: "$finalRiskScore",
         },
         averageQuizScore: {
-          $avg: { $ifNull: ["$quizScore", 0] },
+          $avg: "$quizScore",
         },
         averagePhishingScore: {
-          $avg: { $ifNull: ["$phishingScore", 0] },
+          $avg: "$phishingScore",
         },
         averageTrainingScore: {
-          $avg: { $ifNull: ["$trainingScore", 0] },
+          $avg: "$trainingScore",
         },
         averageAwarenessScore: {
-          $avg: { $ifNull: ["$securityAwarenessScore", 0] },
+          $avg: "$securityAwarenessScore",
         },
         highRisk: {
           $sum: { $cond: [{ $eq: [{ $toLower: "$riskLevel" }, "high"] }, 1, 0] },

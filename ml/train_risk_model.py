@@ -26,8 +26,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATASET = ROOT / "ml" / "data" / "processed" / "employee_features.csv"
 DEFAULT_REPORT = ROOT / "ml" / "data" / "processed" / "training_report.json"
-DEFAULT_MODEL_DIR = ROOT / "ml" / "models"
-DEFAULT_MODEL = DEFAULT_MODEL_DIR / "risk_model.joblib"
+DEFAULT_MODEL = ROOT / "ml" / "data" / "processed" / "risk_model.joblib"
 TARGET_COLUMN = "risk_label"
 RISK_CLASSES = ["Low", "Medium", "High"]
 MIN_SAMPLES = 30

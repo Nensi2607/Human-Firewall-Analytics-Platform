@@ -1,11 +1,22 @@
 import unittest
-from unittest.mock import MagicMock, patch
+import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 import app
 
 
 class PredictionPersistenceTests(unittest.TestCase):
-    def test_validate_features_allows_optional_user_id(self):
+    def test_health_reports_missing_model_as_unavailable(self):
+        missing_model = Path(__file__).with_name("missing-risk-model.joblib")
+        with patch.object(app, "MODEL_PATH", missing_model):
+            response = app.app.test_client().get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.get_json()["model_available"])
+        self.assertIsNone(response.get_json()["model_version"])
+
+    def test_validate_features_rejects_user_id_from_client(self):
         payload = {
             "userId": "64e1d7a5c9d3b1a41a2b3c4d",
             "quiz_attempt_count": 5,
@@ -26,32 +37,8 @@ class PredictionPersistenceTests(unittest.TestCase):
             "phishing_reported_count": 0,
         }
         cleaned, errors = app.validate_features(payload)
-        self.assertEqual(errors, [])
-        self.assertEqual(cleaned["userId"], payload["userId"])
-
-    def test_save_prediction_record_includes_model_version_and_timestamp(self):
-        mock_client = MagicMock()
-        mock_db = MagicMock()
-        mock_collection = MagicMock()
-        mock_collection.insert_one.return_value.inserted_id = "abc123"
-        mock_db.__getitem__.return_value = mock_collection
-        mock_client.get_default_database.return_value = mock_db
-
-        with patch("app.MongoClient", return_value=mock_client):
-            result = app.save_prediction_record(
-                {
-                    "userId": "64e1d7a5c9d3b1a41a2b3c4d",
-                    "predicted_risk": "Low",
-                    "confidence": 0.96,
-                    "model_version": "baseline-logistic-regression-v1",
-                }
-            )
-
-        self.assertEqual(result["inserted_id"], "abc123")
-        document = mock_collection.insert_one.call_args[0][0]
-        self.assertEqual(document["predictedRisk"], "Low")
-        self.assertEqual(document["modelVersion"], "baseline-logistic-regression-v1")
-        self.assertIn("generatedAt", document)
+        self.assertIsNone(cleaned)
+        self.assertIn("Unknown feature fields: userId.", errors)
 
 
 if __name__ == "__main__":

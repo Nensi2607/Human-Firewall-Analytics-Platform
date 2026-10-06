@@ -10,6 +10,7 @@ import RiskDistributionChart from "../components/analytics/RiskDistributionChart
 import TrainingPerformanceChart from "../components/analytics/TrainingPerformanceChart";
 import { getDepartments } from "../services/adminDirectoryService";
 import { downloadAnalyticsReport } from "../services/reportGenerator";
+import { getRecommendations } from "../services/recommendationService";
 import {
   getAnalyticsOverview,
   getDepartmentComparison,
@@ -41,6 +42,7 @@ function AnalyticsDashboard() {
   const [trainingPerformance, setTrainingPerformance] = useState([]);
   const [departmentComparison, setDepartmentComparison] = useState([]);
   const [mlPredictions, setMLPredictions] = useState({});
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdmin] = useState(() => {
@@ -86,6 +88,7 @@ function AnalyticsDashboard() {
           trainingResponse,
           departmentComparisonResponse,
           mlResponse,
+          recommendationsResponse,
         ] = await Promise.all([
           getAnalyticsOverview(appliedFilters),
           getRiskDistribution(appliedFilters),
@@ -96,6 +99,7 @@ function AnalyticsDashboard() {
           getTrainingPerformance(appliedFilters),
           getDepartmentComparison(appliedFilters),
           getMLPredictions(appliedFilters),
+          getRecommendations(),
         ]);
 
         if (!isActive) return;
@@ -111,6 +115,7 @@ function AnalyticsDashboard() {
           departmentComparisonResponse?.data || departmentComparisonResponse || []
         );
         setMLPredictions(mlResponse?.data || mlResponse || {});
+        setRecommendations(recommendationsResponse?.data || recommendationsResponse || []);
       } catch (err) {
         console.error("Analytics loading failed:", err);
         if (isActive) setError("Unable to load analytics data.");
@@ -153,7 +158,7 @@ function AnalyticsDashboard() {
       phishingPerformance,
       trainingPerformance,
       mlPredictions,
-      recommendations: [],
+      recommendations,
     });
   };
 

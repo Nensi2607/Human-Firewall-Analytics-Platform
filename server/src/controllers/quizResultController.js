@@ -1,6 +1,7 @@
 const QuizResult = require("../models/QuizResult");
 const Question = require("../models/Question");
 const mongoose = require("mongoose");
+const { findAccessibleQuiz } = require("../services/quizAccessService");
 
 exports.getMyQuizResults = async (req, res, next) => {
 	try {
@@ -35,7 +36,15 @@ exports.submitQuizResult = async (req, res, next) => {
 			});
 		}
 
-		const questions = await Question.find({ quizId })
+		const quiz = await findAccessibleQuiz(quizId, req.user);
+		if (!quiz) {
+			return res.status(404).json({
+				success: false,
+				message: "Quiz not found.",
+			});
+		}
+
+		const questions = await Question.find({ quizId: quiz._id })
 			.select("correctAnswer")
 			.sort({ _id: 1 })
 			.lean();
@@ -60,7 +69,7 @@ exports.submitQuizResult = async (req, res, next) => {
 
 		const result = await QuizResult.create({
 			userId: req.user._id,
-			quizId,
+			quizId: quiz._id,
 			score,
 			totalQuestions,
 			correctAnswers,

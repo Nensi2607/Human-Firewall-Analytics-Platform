@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "dev": "npm --prefix client run dev -- --host",
+    "client:dev": "npm --prefix client run dev -- --host",
+    "server:dev": "npm --prefix server run dev"
+  },
   "dependencies": {
     "axios": "^1.19.0"
   }

@@ -120,11 +120,6 @@ const employeeMenuItems = [
     path: "/my/notifications",
     icon: Bell,
   },
-  {
-    name: "Leaderboard",
-    path: "/leaderboard",
-    icon: Trophy,
-  },
 ];
 
 const getCurrentUser = () => {

@@ -1,8 +1,11 @@
 const Quiz = require("../models/Quiz");
+const Question = require("../models/Question");
+const QuizResult = require("../models/QuizResult");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const mongoose = require("mongoose");
 const { createNotificationsForUsers } = require("../services/notificationService");
+const { findAccessibleQuiz } = require("../services/quizAccessService");
 const allowedFields = [
 	"title",
 	"description",
@@ -100,7 +103,7 @@ exports.getQuizzes = async (req, res, next) => {
 
 exports.getQuiz = async (req, res, next) => {
 	try {
-		const quiz = await Quiz.findById(req.params.id);
+		const quiz = await findAccessibleQuiz(req.params.id, req.user);
 
 		if (!quiz) {
 			return res.status(404).json({
@@ -209,6 +212,20 @@ exports.updateQuiz = async (req, res, next) => {
 
 exports.deleteQuiz = async (req, res, next) => {
 	try {
+		if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid quiz ID.",
+			});
+		}
+
+		if (await QuizResult.exists({ quizId: req.params.id })) {
+			return res.status(409).json({
+				success: false,
+				message: "This quiz has submitted results and cannot be deleted.",
+			});
+		}
+
 		const quiz = await Quiz.findByIdAndDelete(req.params.id);
 
 		if (!quiz) {
@@ -217,6 +234,7 @@ exports.deleteQuiz = async (req, res, next) => {
 				message: "Quiz not found.",
 			});
 		}
+		await Question.deleteMany({ quizId: quiz._id });
 
 		res.status(200).json({
 			success: true,

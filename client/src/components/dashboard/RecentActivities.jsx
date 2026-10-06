@@ -1,17 +1,47 @@
-const fallbackActivities = [
-  { title: "Training completed", time: "2 hours ago" },
-  { title: "Quiz submitted", time: "Yesterday" },
-  { title: "Phishing simulation reviewed", time: "3 days ago" },
-];
+import { useEffect, useState } from "react";
+import { getNotifications } from "../../services/notificationService";
 
-const RecentActivities = ({ activities = fallbackActivities }) => {
+const RecentActivities = () => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    void getNotifications()
+      .then((response) => {
+        if (isActive) {
+          setActivities((response.data || []).slice(0, 5).map((notification) => ({
+            title: notification.title,
+            time: notification.createdAt
+              ? new Date(notification.createdAt).toLocaleString()
+              : "",
+          })));
+        }
+      })
+      .catch(() => {
+        if (isActive) setError(true);
+      })
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <section className="dashboard-panel">
       <div className="panel-header">
         <h2>Recent Activities</h2>
       </div>
 
-      {activities.length === 0 ? (
+      {loading ? (
+        <p className="empty-state">Loading recent activity...</p>
+      ) : error ? (
+        <p className="empty-state">Unable to load recent activity.</p>
+      ) : activities.length === 0 ? (
         <p className="empty-state">No recent activity yet.</p>
       ) : (
         <ul className="activity-list">

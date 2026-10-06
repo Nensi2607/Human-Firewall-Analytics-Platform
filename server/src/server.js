@@ -4,6 +4,7 @@ const app = require("./app");
 const connectDB = require("./config/database");
 const logger = require("./utils/logger");
 const initializeCollections = require("./utils/initializeCollections");
+const { verifyTransporter } = require("./services/emailService");
 
 const PORT = process.env.PORT || 5000;
 
@@ -12,6 +13,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   await initializeCollections();
+  await verifyTransporter();
 
   // Start Server
   app.listen(PORT, "0.0.0.0", () => {

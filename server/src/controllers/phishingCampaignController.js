@@ -5,7 +5,10 @@ const PhishingAttempt = require("../models/PhishingAttempt");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const { sendPhishingEmail } = require("../services/emailService");
-const { createUserNotification } = require("../services/notificationService");
+const {
+	createUserNotification,
+	createNotificationsForUsers,
+} = require("../services/notificationService");
 
 const getTrackingBaseUrl = () =>
 	process.env.PHISHING_TRACKING_URL ||
@@ -35,12 +38,27 @@ const getTargets = async (campaign) => {
 		.lean();
 };
 
+
+const escapeHtml = (value) =>
+	value.replace(/[&<>"']/g, (character) => ({
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#39;",
+	})[character]);
+
 const renderEmailTemplate = (template, trackingUrl) => {
 	const link = `<a href="${trackingUrl}">Review the security message</a>`;
-	return template.includes("{{TRACKING_LINK}}")
-		? template.replaceAll("{{TRACKING_LINK}}", link)
-		: `${template}<p>${link}</p>`;
+	const pixelUrl = trackingUrl.replace(/\/track\//, "/pixel/");
+	const parts = template.split("{{TRACKING_LINK}}");
+	const body = parts
+		.map((part) => escapeHtml(part).replace(/\r?\n/g, "<br>"))
+		.join(link);
+	return `<p>${body}</p><img src="${pixelUrl}" width="1" height="1" style="display:none;" alt="" />`;
 };
+
+exports.renderEmailTemplate = renderEmailTemplate;
 
 exports.createCampaign = async (req, res, next) => {
 	try {
@@ -48,6 +66,7 @@ exports.createCampaign = async (req, res, next) => {
 			title,
 			emailSubject,
 			emailTemplate,
+			senderName,
 			targetUsers = [],
 			targetDepartments = [],
 			targetAll = false,
@@ -60,6 +79,9 @@ exports.createCampaign = async (req, res, next) => {
 			!emailSubject.trim() ||
 			typeof emailTemplate !== "string" ||
 			!emailTemplate.trim() ||
+			typeof senderName !== "string" ||
+			!senderName.trim() ||
+			/[@<>\r\n]/.test(senderName) ||
 			!validateObjectIds(targetUsers) ||
 			!validateObjectIds(targetDepartments) ||
 			typeof targetAll !== "boolean" ||
@@ -87,6 +109,7 @@ exports.createCampaign = async (req, res, next) => {
 			title: title.trim(),
 			emailSubject: emailSubject.trim(),
 			emailTemplate,
+			senderName: senderName.trim(),
 			targetUsers,
 			targetDepartments,
 			targetAll,
@@ -114,6 +137,22 @@ exports.getCampaigns = async (req, res, next) => {
 					_id: "$campaignId",
 					targetedCount: { $sum: 1 },
 					clickedCount: { $sum: { $cond: ["$clicked", 1, 0] } },
+					reportedCount: { $sum: { $cond: ["$reported", 1, 0] } },
+					ignoredCount: {
+						$sum: {
+							$cond: [
+								{
+									$and: [
+										{ $lt: ["$expiresAt", new Date()] },
+										{ $ne: ["$clicked", true] },
+										{ $ne: ["$reported", true] },
+									],
+								},
+								1,
+								0,
+							],
+						},
+					},
 				},
 			},
 		]);
@@ -129,6 +168,8 @@ exports.getCampaigns = async (req, res, next) => {
 					...campaign,
 					targetedCount,
 					clickedCount,
+					reportedCount: stat?.reportedCount || 0,
+					ignoredCount: stat?.ignoredCount || 0,
 					clickRate: targetedCount ? Math.round((clickedCount / targetedCount) * 100) : 0,
 				};
 			})
@@ -168,9 +209,22 @@ exports.launchCampaign = async (req, res, next) => {
 		await campaign.save();
 
 		let sentCount = 0;
+		let previewCount = 0;
+		const previewMode = !process.env.SMTP_HOST;
 		for (const employee of targets) {
 			const token = crypto.randomBytes(32).toString("hex");
 			const trackingUrl = `${getTrackingBaseUrl()}/${token}`;
+			if (previewMode) {
+				await sendPhishingEmail({
+					to: employee.email,
+					subject: campaign.emailSubject,
+					html: renderEmailTemplate(campaign.emailTemplate, trackingUrl),
+					senderName: campaign.senderName,
+				});
+				previewCount += 1;
+				continue;
+			}
+
 			const expiresAt = new Date(
 				Date.now() + Number(process.env.PHISHING_TOKEN_TTL_HOURS || 720) * 60 * 60 * 1000
 			);
@@ -188,6 +242,7 @@ exports.launchCampaign = async (req, res, next) => {
 					to: employee.email,
 					subject: campaign.emailSubject,
 					html: renderEmailTemplate(campaign.emailTemplate, trackingUrl),
+					senderName: campaign.senderName,
 				});
 				sentCount += 1;
 			} catch (err) {
@@ -197,7 +252,33 @@ exports.launchCampaign = async (req, res, next) => {
 		}
 
 		campaign.status = "completed";
+		if (previewMode) {
+			campaign.status = "draft";
+			campaign.launchDate = undefined;
+			campaign.launchedBy = undefined;
+			await campaign.save();
+			return res.status(200).json({
+				success: true,
+				message: "Preview generated. No simulation emails were sent; configure SMTP to launch this campaign.",
+				data: {
+					campaignId: campaign._id,
+					targetedCount: targets.length,
+					sentCount: 0,
+					previewCount,
+					previewMode: true,
+				},
+			});
+		}
+
 		await campaign.save();
+		await createNotificationsForUsers(
+			targets.map((employee) => employee._id),
+			{
+				title: "Phishing campaign launched",
+				message: `A phishing simulation, ${campaign.title}, is now active for you.`,
+				type: "warning",
+			}
+		);
 		await createUserNotification({
 			userId: req.user._id,
 			title: "Phishing campaign launched",
@@ -224,10 +305,19 @@ exports.getCampaignStats = async (req, res, next) => {
 		}
 
 		const attempts = await PhishingAttempt.find({ campaignId: campaign._id })
+			.select("employeeId sentAt expiresAt clicked clickedAt reported reportedAt")
 			.populate("employeeId", "firstName lastName email")
 			.sort({ sentAt: 1 })
 			.lean();
 		const clickedCount = attempts.filter((attempt) => attempt.clicked).length;
+		const reportedCount = attempts.filter((attempt) => attempt.reported).length;
+		const ignoredCount = attempts.filter(
+			(attempt) =>
+				attempt.expiresAt &&
+				attempt.expiresAt < new Date() &&
+				!attempt.clicked &&
+				!attempt.reported
+		).length;
 
 		return res.status(200).json({
 			success: true,
@@ -235,11 +325,16 @@ exports.getCampaignStats = async (req, res, next) => {
 				campaign,
 				targetedCount: attempts.length,
 				clickedCount,
+				reportedCount,
+				ignoredCount,
 				clickRate: attempts.length ? Math.round((clickedCount / attempts.length) * 100) : 0,
 				employees: attempts.map((attempt) => ({
 					employee: attempt.employeeId,
 					clicked: attempt.clicked,
 					clickedAt: attempt.clickedAt,
+					reported: attempt.reported,
+					reportedAt: attempt.reportedAt,
+					expiresAt: attempt.expiresAt,
 					sentAt: attempt.sentAt,
 				})),
 			},

@@ -1,6 +1,7 @@
 const PhishingAttempt = require("../models/PhishingAttempt");
 const QuizResult = require("../models/QuizResult");
 const Recommendation = require("../models/Recommendation");
+const AIPrediction = require("../models/AIPrediction");
 const Training = require("../models/Training");
 const TrainingProgress = require("../models/TrainingProgress");
 const { createUserNotification } = require("./notificationService");
@@ -9,6 +10,7 @@ const buildRecommendations = ({
 	riskScore,
 	latestQuiz,
 	latestPhishingAttempt,
+	latestPrediction,
 	incompleteTrainingCount,
 }) => {
 	const recommendations = [];
@@ -55,11 +57,29 @@ const buildRecommendations = ({
 		});
 	}
 
+	if (latestPrediction?.predictedRisk === "High") {
+		recommendations.push({
+			riskScoreSnapshot,
+			title: "Review your highest-risk security behaviors",
+			description:
+			"The latest baseline model prediction is High risk. Review your quiz, training, and phishing activity with your security administrator.",
+			priority: "high",
+		});
+	} else if (latestPrediction?.predictedRisk === "Medium") {
+		recommendations.push({
+			riskScoreSnapshot,
+			title: "Strengthen your security habits",
+			description:
+			"The latest baseline model prediction is Medium risk. Continue assigned training and review recent security activity.",
+			priority: "medium",
+		});
+	}
+
 	return recommendations;
 };
 
 const generateRecommendations = async (userId, riskScore) => {
-	const [latestQuiz, latestPhishingAttempt, availableTrainings] =
+	const [latestQuiz, latestPhishingAttempt, latestPrediction, availableTrainings] =
 		await Promise.all([
 			QuizResult.findOne({ userId })
 				.select("percentage correctAnswers totalQuestions completedAt submittedAt")
@@ -68,6 +88,10 @@ const generateRecommendations = async (userId, riskScore) => {
 			PhishingAttempt.findOne({ userId })
 				.select("clicked linkClicked credentialsEntered sentAt")
 				.sort({ sentAt: -1 })
+				.lean(),
+			AIPrediction.findOne({ userId })
+				.select("predictedRisk confidence modelVersion generatedAt")
+				.sort({ generatedAt: -1 })
 				.lean(),
 			Training.find().select("_id").lean(),
 		]);
@@ -91,6 +115,7 @@ const generateRecommendations = async (userId, riskScore) => {
 		riskScore,
 		latestQuiz,
 		latestPhishingAttempt,
+		latestPrediction,
 		incompleteTrainingCount,
 	});
 

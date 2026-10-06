@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import phishingScenarios from "../data/phishingScenarios";
 import { submitPhishingAwarenessResult } from "../services/phishingAwarenessService";
+import {
+  getMyPhishingAttempts,
+  reportPhishingAttempt,
+} from "../services/phishingAttemptService";
 
 const awarenessCards = [
   {
@@ -52,6 +56,10 @@ const getFeedback = (score, total) => {
 };
 
 const Phishing = () => {
+  const [attempts, setAttempts] = useState([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(true);
+  const [attemptsError, setAttemptsError] = useState("");
+  const [reportingId, setReportingId] = useState("");
   const [scenarioIndex, setScenarioIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [score, setScore] = useState(0);
@@ -64,6 +72,39 @@ const Phishing = () => {
   const hasAnswered = Boolean(selectedAnswer);
   const isCorrect = selectedAnswer === scenario.correctAnswer;
   const isLastScenario = scenarioIndex === phishingScenarios.length - 1;
+
+  useEffect(() => {
+    let isActive = true;
+    void getMyPhishingAttempts()
+      .then((response) => {
+        if (isActive) setAttempts(response.data || []);
+      })
+      .catch(() => {
+        if (isActive) setAttemptsError("Unable to load your simulation history.");
+      })
+      .finally(() => {
+        if (isActive) setAttemptsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const handleReportAttempt = async (attemptId) => {
+    setReportingId(attemptId);
+    setAttemptsError("");
+    try {
+      const response = await reportPhishingAttempt(attemptId);
+      setAttempts((current) => current.map((attempt) => (
+        attempt._id === attemptId ? response.data : attempt
+      )));
+    } catch (error) {
+      setAttemptsError(error.response?.data?.message || "Unable to report this simulation.");
+    } finally {
+      setReportingId("");
+    }
+  };
 
   const answerScenario = (answer) => {
     if (hasAnswered) {
@@ -145,6 +186,46 @@ const Phishing = () => {
         ))}
       </section>
 
+      <section className="mb-10 border-y border-slate-200 py-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Simulation history</h2>
+            <p className="mt-1 text-sm text-slate-600">Only your own controlled simulation activity is shown. Email opens are not tracked.</p>
+          </div>
+        </div>
+        {attemptsError && <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{attemptsError}</p>}
+        {attemptsLoading ? <p role="status" className="mt-4 text-sm text-slate-500">Loading simulation history...</p> : attempts.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">No campaign simulations have been assigned to you.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-slate-200">
+            {attempts.map((attempt) => {
+              const expired = attempt.expiresAt && new Date(attempt.expiresAt) < new Date();
+              const status = attempt.reported
+                ? "Reported"
+                : attempt.linkClicked || attempt.clicked
+                  ? "Link clicked"
+                  : expired
+                    ? "No response before expiry"
+                    : "Awaiting response";
+              return (
+                <li key={attempt._id} className="flex flex-wrap items-center justify-between gap-4 py-4">
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{attempt.campaignId?.title || "Security simulation"}</h3>
+                    <p className="mt-1 text-sm text-slate-600">{status} · Sent {new Date(attempt.sentAt).toLocaleDateString()}</p>
+                    {attempt.clickedAt && <p className="mt-1 text-xs text-slate-500">Link clicked {new Date(attempt.clickedAt).toLocaleString()}</p>}
+                  </div>
+                  {!attempt.reported && (
+                    <button type="button" onClick={() => handleReportAttempt(attempt._id)} disabled={reportingId === attempt._id} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                      {reportingId === attempt._id ? "Reporting..." : "Report Suspicious Email"}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
       <section className="mb-10 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-slate-900">How to Spot Phishing</h2>
@@ -219,12 +300,9 @@ const Phishing = () => {
                 <span>{scenario.subject}</span>
               </div>
               <p className="mt-6 leading-7 text-slate-700">{scenario.message}</p>
-              <button
-                type="button"
-                className="mt-5 rounded-lg border border-blue-300 bg-white px-4 py-2 font-semibold text-blue-700"
-              >
+              <p className="mt-5 inline-block border-b border-blue-500 pb-0.5 text-blue-700" aria-label="Example link shown in the simulated message">
                 Verify Account
-              </button>
+              </p>
             </div>
 
             <h3 className="mt-8 text-lg font-semibold text-slate-900">

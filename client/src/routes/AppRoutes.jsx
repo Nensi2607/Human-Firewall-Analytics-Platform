@@ -8,7 +8,6 @@ import Register from "../pages/Register";
 import AdminDashboard from "../pages/AdminDashboard";
 import EmployeeDashboard from "../pages/EmployeeDashboard";
 import AnalyticsDashboard from "../pages/AnalyticsDashboard";
-import PlaceholderPage from "../pages/PlaceholderPage";
 
 import Quiz from "../pages/Quiz";
 import Training from "../pages/Training";
@@ -17,9 +16,14 @@ import PhishingAwarenessLanding from "../pages/PhishingAwarenessLanding";
 import AdminQuizManagement from "../pages/AdminQuizManagement";
 import AdminPhishingCampaigns from "../pages/AdminPhishingCampaigns";
 import AdminTrainingManagement from "../pages/AdminTrainingManagement";
+import AdminEmployees from "../pages/AdminEmployees";
+import AdminDepartments from "../pages/AdminDepartments";
 import NotificationInbox from "../pages/NotificationInbox";
 import EmployeeProgress from "../pages/EmployeeProgress";
 import Leaderboard from "../pages/Leaderboard";
+import Recommendations from "../pages/Recommendations";
+import Reports from "../pages/Reports";
+import Risk from "../pages/Risk";
 
 const getStoredUser = () => {
   try {
@@ -88,12 +92,7 @@ const AppRoutes = () => {
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route
               path="/recommendations"
-              element={
-                <PlaceholderPage
-                  title="Organization Recommendations"
-                  description="Manage recommendations across the organization."
-                />
-              }
+              element={<Recommendations />}
             />
             <Route
               path="/notifications"
@@ -101,30 +100,15 @@ const AppRoutes = () => {
             />
             <Route
               path="/reports"
-              element={
-                <PlaceholderPage
-                  title="Organization Reports"
-                  description="Generate organization-wide PDF and Excel reports."
-                />
-              }
+              element={<Reports />}
             />
             <Route
               path="/departments"
-              element={
-                <PlaceholderPage
-                  title="Departments"
-                  description="Manage departments and their assignments."
-                />
-              }
+              element={<AdminDepartments />}
             />
             <Route
               path="/employees"
-              element={
-                <PlaceholderPage
-                  title="Employees"
-                  description="Manage employee accounts, departments, and assignments."
-                />
-              }
+              element={<AdminEmployees />}
             />
           </Route>
 
@@ -136,32 +120,22 @@ const AppRoutes = () => {
             <Route path="/training" element={<Training />} />
             <Route path="/training/quiz" element={<Quiz />} />
             <Route path="/phishing" element={<Phishing />} />
-            <Route
-              path="/risk"
-              element={
-                <PlaceholderPage
-                  title="My Risk"
-                  description="View your own risk score and security activity history."
-                />
-              }
-            />
+            <Route path="/risk" element={<Risk />} />
             <Route
               path="/my/recommendations"
-              element={
-                <PlaceholderPage
-                  title="My Recommendations"
-                  description="Review recommendations based on your security activity."
-                />
-              }
+              element={<Recommendations />}
             />
             <Route
               path="/my/notifications"
               element={<NotificationInbox />}
             />
-            <Route path="/leaderboard" element={<Leaderboard />} />
           </Route>
         </Route>
       </Route>
+      <Route
+        path="*"
+        element={<Navigate to={isAuthenticated() ? getHomePath() : "/login"} replace />}
+      />
     </Routes>
   );
 };

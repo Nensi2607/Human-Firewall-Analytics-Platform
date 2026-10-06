@@ -23,7 +23,7 @@ const calculateRiskAssessment = async (userId) => {
         .select("score correctAnswers totalScenarios completedAt")
         .lean(),
       PhishingAttempt.findOne({ userId })
-        .select("clicked sentAt")
+        .select("clicked emailOpened reported sentAt")
         .sort({ sentAt: -1 })
         .lean(),
     ]);
@@ -75,7 +75,19 @@ const calculateRiskAssessment = async (userId) => {
   }
 
   if (latestPhishingAttempt) {
-    phishingScores.push(latestPhishingAttempt.clicked ? 0 : 100);
+    // Placeholder weighting pending final team decision: reporting a suspicious
+    // email is treated as the safest outcome (100), opening without reporting
+    // or clicking is treated as a moderate outcome (60), and clicking is
+    // treated as the highest-risk outcome (0).
+    const phishingSignalScore = latestPhishingAttempt.reported
+      ? 100
+      : latestPhishingAttempt.clicked
+      ? 0
+      : latestPhishingAttempt.emailOpened
+      ? 60
+      : 100;
+
+    phishingScores.push(phishingSignalScore);
   }
 
   if (phishingScores.length > 0) {

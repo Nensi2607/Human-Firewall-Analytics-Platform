@@ -58,7 +58,6 @@ const addSectionToPdf = (doc, title, rows, options = {}) => {
 
 export function downloadAnalyticsReport(data = {}) {
   const doc = new jsPDF();
-  let y = 20;
 
   doc.setFillColor(37, 99, 235);
   doc.rect(0, 0, 220, 20, "F");
@@ -68,7 +67,7 @@ export function downloadAnalyticsReport(data = {}) {
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
   doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
-  y = 36;
+  let y = 36;
 
   const overviewRows = [
     { Metric: "Total Employees", Value: formatValue(data.overview?.totalEmployees) },
@@ -123,10 +122,10 @@ export function downloadAnalyticsReport(data = {}) {
   }));
   y = addSectionToPdf(doc, "Training Progress", trainingRows, { startY: y });
 
-  const hasAIData = !!(
-    data.mlPredictions &&
-    ((data.mlPredictions.modelStatus && data.mlPredictions.modelStatus.available) ||
-      (Array.isArray(data.mlPredictions.latestPredictions) && data.mlPredictions.latestPredictions.length > 0))
+  const hasAIData = Boolean(
+    data.mlPredictions?.modelStatus?.available === true &&
+    Array.isArray(data.mlPredictions.latestPredictions) &&
+    data.mlPredictions.latestPredictions.length > 0
   );
 
   if (hasAIData) {

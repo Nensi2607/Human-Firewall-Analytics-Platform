@@ -5,6 +5,7 @@ const Training = require("../models/Training");
 const TrainingProgress = require("../models/TrainingProgress");
 const PhishingAwarenessResult = require("../models/PhishingAwarenessResult");
 const RiskAssessment = require("../models/RiskAssessment");
+const PhishingCampaign = require("../models/PhishingCampaign");
 const { calculateRiskAssessment } = require("../services/riskAssessmentService");
 
 // ==========================================
@@ -44,6 +45,14 @@ exports.getAdminDashboard = async (req, res, next) => {
       typeof riskData[0].averageRiskScore === "number"
         ? Math.round(riskData[0].averageRiskScore)
         : null;
+    const [trainingCount, completedTrainingCount, campaignCount, highRiskEmployees] =
+      await Promise.all([
+        Training.countDocuments(),
+        TrainingProgress.countDocuments({ completed: true }),
+        PhishingCampaign.countDocuments(),
+        RiskAssessment.countDocuments({ riskLevel: "High" }),
+      ]);
+    const employeeTrainingAssignments = totalEmployees * trainingCount;
 
     res.status(200).json({
       success: true,
@@ -54,8 +63,10 @@ exports.getAdminDashboard = async (req, res, next) => {
         activeEmployees,
         inactiveEmployees,
         averageRiskScore,
-        completedTrainings: 0,
-        pendingTrainings: 0,
+        completedTrainings: completedTrainingCount,
+        pendingTrainings: Math.max(employeeTrainingAssignments - completedTrainingCount, 0),
+        campaignCount,
+        highRiskEmployees,
       },
     });
 

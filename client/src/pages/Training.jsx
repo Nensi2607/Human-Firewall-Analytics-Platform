@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import trainingContent from "../data/trainingContent";
 import {
   completeTraining,
   getTrainingProgress,
@@ -140,10 +139,9 @@ const Training = () => {
                   ? 100
                   : progress?.progress ?? 0;
                 const isSelected = selectedTrainingId === trainingId;
-                const content = trainingContent[training.title] || [
-                  "Review the training material carefully.",
-                  "Apply the guidance to your everyday security habits.",
-                ];
+                const content = training.description
+                  ? [training.description]
+                  : ["Review the training material carefully."];
 
                 return (
                   <article
@@ -209,6 +207,16 @@ const Training = () => {
                             <li key={item}>- {item}</li>
                           ))}
                         </ul>
+                        {training.resourceURL && (
+                          <a
+                            href={training.resourceURL}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-4 inline-block font-semibold text-blue-700 underline"
+                          >
+                            Open training resource
+                          </a>
+                        )}
 
                         {isCompleted ? (
                           <p className="mt-5 font-semibold text-emerald-600">

@@ -33,9 +33,22 @@ exports.protect = async (req, res, next) => {
       });
     }
 
+    if (req.user.status === "inactive") {
+      return res.status(401).json({
+        success: false,
+        message: "This account is inactive.",
+      });
+    }
+
     next();
 
   } catch (error) {
+    if (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Your session is invalid or has expired. Please log in again.",
+      });
+    }
     next(error);
   }
 };

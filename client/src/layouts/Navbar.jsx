@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bell, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Bell } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getNotifications } from "../services/notificationService";
 
 const getCurrentUser = () => {
@@ -13,6 +13,7 @@ const getCurrentUser = () => {
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
   const currentUser = getCurrentUser();
   const role = (currentUser?.role || "Employee").toString();
@@ -20,6 +21,29 @@ const Navbar = () => {
   const fullName = currentUser
     ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
     : "User";
+  const pageTitle = {
+    "/dashboard": "Security Overview",
+    "/admin": "Security Overview",
+    "/employee": "My Security Dashboard",
+    "/employees": "Employee Management",
+    "/departments": "Department Management",
+    "/admin/quizzes": "Quiz Management",
+    "/admin/training": "Training Management",
+    "/admin/phishing": "Phishing Simulations",
+    "/analytics": "Risk Analytics",
+    "/employee-progress": "Employee Progress",
+    "/my/progress": "My Progress",
+    "/quiz": "Security Quiz",
+    "/training": "Security Training",
+    "/phishing": "Phishing Awareness",
+    "/risk": "My Human Risk",
+    "/recommendations": "Recommendations",
+    "/my/recommendations": "My Recommendations",
+    "/notifications": "Notifications",
+    "/my/notifications": "My Notifications",
+    "/reports": "Reports",
+    "/leaderboard": "Learning Leaderboard",
+  }[pathname] || "Human Firewall Analytics Platform";
 
   useEffect(() => {
     let isActive = true;
@@ -43,16 +67,11 @@ const Navbar = () => {
   return (
     <header className="topbar">
       <div>
-        <p className="eyebrow">Cyber Security Awareness Dashboard</p>
-        <h1>Human Firewall Analytics Platform</h1>
+        <p className="eyebrow">HFAP · {role}</p>
+        <h1>{pageTitle}</h1>
       </div>
 
       <div className="topbar-actions">
-        <div className="search-box">
-          <Search size={18} className="text-gray-500" />
-          <input type="text" placeholder="Search..." />
-        </div>
-
         <button
           type="button"
           className="notification-button"

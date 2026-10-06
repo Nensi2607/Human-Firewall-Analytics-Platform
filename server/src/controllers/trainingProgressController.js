@@ -20,7 +20,7 @@ exports.getTrainingProgress = async (req, res, next) => {
 exports.updateTrainingProgress = async (req, res, next) => {
 	try {
 		const { trainingId } = req.params;
-		const { progress, completed } = req.body;
+		const { progress } = req.body;
 
 		if (!mongoose.Types.ObjectId.isValid(trainingId)) {
 			return res.status(400).json({
@@ -34,12 +34,11 @@ exports.updateTrainingProgress = async (req, res, next) => {
 			!Number.isFinite(progress) ||
 			progress < 0 ||
 			progress > 100 ||
-			typeof completed !== "boolean" ||
-			(completed && progress !== 100)
+			Object.prototype.hasOwnProperty.call(req.body, "completed")
 		) {
 			return res.status(400).json({
 				success: false,
-				message: "Progress must be between 0 and 100, and completed requires 100% progress.",
+				message: "Progress must be between 0 and 100; completion is calculated by the server.",
 			});
 		}
 
@@ -52,7 +51,7 @@ exports.updateTrainingProgress = async (req, res, next) => {
 			});
 		}
 
-		const isCompleted = completed;
+		const isCompleted = progress === 100;
 		const savedProgress = await TrainingProgress.findOneAndUpdate(
 			{
 				userId: req.user._id,

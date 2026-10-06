@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
 const actions = [
-  { label: "Create Campaign", to: "/admin/campaigns", tone: "#2563eb" },
-  { label: "Review Employees", to: "/admin/employees", tone: "#10b981" },
-  { label: "Manage Quizzes", to: "/admin/quiz-management", tone: "#f59e0b" },
+  { label: "Create Campaign", to: "/admin/phishing", tone: "#2563eb" },
+  { label: "Review Employees", to: "/employees", tone: "#10b981" },
+  { label: "Manage Quizzes", to: "/admin/quizzes", tone: "#f59e0b" },
 ];
 
 const QuickActions = () => {

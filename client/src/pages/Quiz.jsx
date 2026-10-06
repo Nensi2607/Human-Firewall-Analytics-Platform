@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
+  getAllQuizzes,
   getQuizQuestions,
   submitQuizResult,
 } from "../services/quizService";
-import quizData from "../data/quizData";
 
 const areValidQuizQuestions = (questions) => {
   return (
@@ -23,7 +23,9 @@ const areValidQuizQuestions = (questions) => {
 
 function Quiz() {
   const { quizId } = useParams();
+  const navigate = useNavigate();
 
+  const [availableQuizzes, setAvailableQuizzes] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -33,50 +35,67 @@ function Quiz() {
   const [submissionError, setSubmissionError] = useState("");
   const [submittedResult, setSubmittedResult] = useState(null);
   const [submissionAttempt, setSubmissionAttempt] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    if (quizId) return undefined;
+    let isActive = true;
+
+    const loadQuizzes = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const quizzes = await getAllQuizzes();
+        if (isActive) setAvailableQuizzes(quizzes);
+      } catch (err) {
+        if (isActive) setError(err.response?.data?.message || "Failed to load assigned quizzes.");
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    void loadQuizzes();
+    return () => {
+      isActive = false;
+    };
+  }, [quizId, retryCount]);
+
+  useEffect(() => {
+    if (!quizId) return undefined;
+    let isActive = true;
+
     const loadQuiz = async () => {
       setLoading(true);
       setError("");
 
-      // Use local sample quiz when no ID is provided
-      if (!quizId || quizId === "sample") {
-        setQuestions(quizData);
-        setLoading(false);
-        return;
-      }
-
       try {
-        console.log("Loading quiz:", quizId);
-
         const data = await getQuizQuestions(quizId);
 
-        console.log("Questions received:", data);
-
         if (areValidQuizQuestions(data)) {
-          setQuestions(data);
+          if (isActive) setQuestions(data);
         } else {
-          setError(
-            Array.isArray(data) && data.length === 0
-              ? "No questions found for this quiz."
-              : "Quiz questions could not be loaded correctly."
-          );
+          if (isActive) {
+            setError(
+              Array.isArray(data) && data.length === 0
+                ? "No questions found for this quiz."
+                : "Quiz questions could not be loaded correctly."
+            );
+          }
         }
       } catch (err) {
-        console.error("Quiz loading error:", err);
-
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "Failed to load quiz questions."
-        );
+        if (isActive) {
+          setError(err.response?.data?.message || "Failed to load quiz questions.");
+        }
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
 
-    loadQuiz();
-  }, [quizId]);
+    void loadQuiz();
+    return () => {
+      isActive = false;
+    };
+  }, [quizId, retryCount]);
 
   const selectAnswer = (option) => {
     setAnswers((previousAnswers) => ({
@@ -109,7 +128,7 @@ function Quiz() {
   };
 
   useEffect(() => {
-    if (!result || questions.length === 0 || submittedResult) {
+    if (!quizId || !result || questions.length === 0 || submittedResult) {
       return;
     }
 
@@ -117,13 +136,6 @@ function Quiz() {
 
     const saveResult = async () => {
       setSubmissionError("");
-
-      if (!quizId || quizId === "sample") {
-        setSubmissionError(
-          "This local sample quiz cannot be saved. Open an assigned quiz to submit a result."
-        );
-        return;
-      }
 
       try {
         const response = await submitQuizResult({
@@ -195,16 +207,38 @@ function Quiz() {
           {error}
         </p>
 
-        <p
-          style={{
-            marginTop: "15px",
-            fontSize: "14px",
-            color: "#777",
-          }}
-        >
-          Quiz ID: {quizId || "sample"}
-        </p>
+        <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="mt-5 rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white">
+          Try again
+        </button>
       </div>
+    );
+  }
+
+  if (!quizId) {
+    return (
+      <section className="mx-auto max-w-4xl">
+        <header className="mb-6 border-b border-slate-200 pb-5">
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Security learning</p>
+          <h1 className="mt-1 text-3xl font-bold text-slate-900">Assigned quizzes</h1>
+          <p className="mt-2 text-slate-600">Choose a quiz to review and complete.</p>
+        </header>
+        {availableQuizzes.length === 0 ? (
+          <p className="py-8 text-slate-500">No assigned quizzes are available yet.</p>
+        ) : (
+          <ul className="divide-y divide-slate-200">
+            {availableQuizzes.map((quiz) => (
+              <li key={quiz._id} className="flex flex-wrap items-center justify-between gap-4 py-5">
+                <div>
+                  <h2 className="font-semibold text-slate-900">{quiz.title}</h2>
+                  <p className="mt-1 text-sm text-slate-600">{quiz.description || "Security awareness assessment"}</p>
+                  <p className="mt-1 text-xs capitalize text-slate-500">{[quiz.category, quiz.difficulty, quiz.duration ? `${quiz.duration} min` : ""].filter(Boolean).join(" · ")}</p>
+                </div>
+                <button type="button" onClick={() => navigate(`/quiz/${quiz._id}`)} className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800">Start quiz</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     );
   }
 
@@ -228,14 +262,14 @@ function Quiz() {
     const score = submittedResult?.score ?? 0;
     const percentage = submittedResult?.percentage ?? 0;
 
-    const risk =
+    const performance =
       percentage >= 80
-        ? "Low Risk"
+        ? "Strong awareness"
         : percentage >= 50
-        ? "Medium Risk"
-        : "High Risk";
+        ? "Developing awareness"
+        : "Review recommended";
 
-    const riskColor =
+    const performanceColor =
       percentage >= 80
         ? "#16A34A"
         : percentage >= 50
@@ -269,8 +303,8 @@ function Quiz() {
 
         <h2>{percentage}%</h2>
 
-        <h2 style={{ color: riskColor }}>
-          {risk}
+        <h2 style={{ color: performanceColor }}>
+          {performance}
         </h2>
 
         <p style={{ marginTop: "15px", color: "#555" }}>

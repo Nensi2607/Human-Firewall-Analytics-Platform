@@ -1,7 +1,9 @@
 const Question = require("../models/Question");
 const Quiz = require("../models/Quiz");
+const QuizResult = require("../models/QuizResult");
 const mongoose = require("mongoose");
 const asyncHandler = require("../utils/asyncHandler");
+const { findAccessibleQuiz } = require("../services/quizAccessService");
 
 const validateQuestionInput = (body, requireAllFields = false) => {
   const allowedFields = ["question", "options", "correctAnswer", "explanation"];
@@ -62,9 +64,16 @@ const validateQuestionInput = (body, requireAllFields = false) => {
 
 // GET all questions of a quiz
 exports.getQuestionsByQuiz = asyncHandler(async (req, res) => {
-  const query = Question.find({
-    quizId: req.params.quizId,
-  });
+  const quiz = await findAccessibleQuiz(req.params.quizId, req.user);
+
+  if (!quiz) {
+    return res.status(404).json({
+      success: false,
+      message: "Quiz not found.",
+    });
+  }
+
+  const query = Question.find({ quizId: quiz._id }).sort({ _id: 1 });
 
   if (req.user.role !== "admin") {
     query.select("-correctAnswer");
@@ -88,13 +97,20 @@ exports.createQuestion = asyncHandler(async (req, res) => {
     });
   }
 
-  const quiz = await Quiz.exists({ _id: req.params.quizId });
+  const quiz = await Quiz.findById(req.params.quizId).select("_id");
   const input = validateQuestionInput(req.body, true);
 
   if (!quiz || !input) {
     return res.status(400).json({
       success: false,
       message: !quiz ? "Quiz not found" : "Invalid question input",
+    });
+  }
+
+  if (await QuizResult.exists({ quizId: quiz._id })) {
+    return res.status(409).json({
+      success: false,
+      message: "Questions cannot be changed after employees have submitted this quiz.",
     });
   }
 
@@ -120,12 +136,26 @@ exports.updateQuestion = asyncHandler(async (req, res) => {
     });
   }
 
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid question ID.",
+    });
+  }
+
   const existingQuestion = await Question.findById(req.params.id);
 
   if (!existingQuestion) {
     return res.status(404).json({
       success: false,
       message: "Question not found",
+    });
+  }
+
+  if (await QuizResult.exists({ quizId: existingQuestion.quizId })) {
+    return res.status(409).json({
+      success: false,
+      message: "Questions cannot be changed after employees have submitted this quiz.",
     });
   }
 
@@ -158,6 +188,28 @@ exports.updateQuestion = asyncHandler(async (req, res) => {
 
 // DELETE question
 exports.deleteQuestion = asyncHandler(async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid question ID.",
+    });
+  }
+
+  const existingQuestion = await Question.findById(req.params.id).select("quizId");
+  if (!existingQuestion) {
+    return res.status(404).json({
+      success: false,
+      message: "Question not found",
+    });
+  }
+
+  if (await QuizResult.exists({ quizId: existingQuestion.quizId })) {
+    return res.status(409).json({
+      success: false,
+      message: "Questions cannot be changed after employees have submitted this quiz.",
+    });
+  }
+
   const question = await Question.findByIdAndDelete(req.params.id);
 
   if (!question) {

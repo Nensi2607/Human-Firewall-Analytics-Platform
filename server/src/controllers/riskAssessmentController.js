@@ -2,6 +2,7 @@ const RiskAssessment = require("../models/RiskAssessment");
 const { calculateRiskAssessment } = require("../services/riskAssessmentService");
 const { generateRecommendations } = require("../services/recommendationService");
 const { createUserNotification } = require("../services/notificationService");
+const { generatePredictionForUser } = require("../services/predictionService");
 
 exports.getRiskAssessment = async (req, res, next) => {
 	try {
@@ -43,11 +44,20 @@ exports.calculateCurrentRiskAssessment = async (req, res, next) => {
 		const recommendations = assessment
 			? await generateRecommendations(req.user._id, assessment.finalRiskScore)
 			: [];
+		let prediction = null;
+		if (assessment) {
+			try {
+				prediction = await generatePredictionForUser(req.user._id);
+			} catch (predictionError) {
+				console.warn("AI prediction unavailable during risk calculation:", predictionError.message);
+			}
+		}
 
 		res.status(200).json({
 			success: true,
 			data: assessment,
 			recommendations,
+			prediction,
 		});
 	} catch (err) {
 		next(err);

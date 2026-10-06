@@ -10,26 +10,27 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
       setLoading(true);
 
       const { data } = await api.post("/auth/login", {
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      alert("Login Successful!");
-
-      navigate("/dashboard");
+      navigate(data.user?.role === "admin" ? "/dashboard" : "/employee", {
+        replace: true,
+      });
     } catch (err) {
-      alert(err.response?.data?.message || "Login Failed");
+      setError(err.response?.data?.message || "Unable to sign in. Check your email and password.");
     } finally {
       setLoading(false);
     }
@@ -59,6 +60,11 @@ const Login = () => {
           <p className="auth-subtitle">Login to continue</p>
 
           <form onSubmit={handleLogin} className="auth-form">
+            {error && (
+              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            )}
             <input
               type="email"
               placeholder="Enter your email"
@@ -76,17 +82,6 @@ const Login = () => {
               required
               className="auth-input"
             />
-
-            <div className="auth-row">
-              <label className="remember-me">
-                <input type="checkbox" />
-                Remember me
-              </label>
-
-              <Link to="/forgot-password" className="auth-link">
-                Forgot Password?
-              </Link>
-            </div>
 
             <button type="submit" disabled={loading} className="auth-cta">
               {loading ? "Signing In..." : "Login"}

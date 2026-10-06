@@ -16,16 +16,17 @@ from typing import Any
 import joblib
 import pandas as pd
 from flask import Flask, jsonify, request
-from pymongo import MongoClient
 
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = Path(
-    os.getenv("HFAP_MODEL_PATH", ROOT / "ml" / "models" / "risk_model.joblib")
+    os.getenv(
+        "HFAP_MODEL_PATH",
+        ROOT / "ml" / "data" / "processed" / "risk_model.joblib",
+    )
 )
 MODEL_VERSION = "baseline-logistic-regression-v1"
 RISK_CLASSES = ["Low", "Medium", "High"]
-ALLOWED_EXTRA_FIELDS = {"userId"}
 
 # This order matches the feature DataFrame used by train_risk_model.py.
 MODEL_FEATURES = [
@@ -73,49 +74,12 @@ def model_available() -> bool:
     return MODEL_PATH.is_file()
 
 
-def load_mongodb_uri() -> str:
-    """Read the existing MongoDB URI, falling back to the server env file."""
-    uri = os.getenv("MONGODB_URI")
-    if uri:
-        return uri
-
-    env_path = ROOT / "server" / ".env"
-    if env_path.exists():
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            if line.startswith("MONGODB_URI="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
-
-    raise RuntimeError("MONGODB_URI was not found in the environment or server/.env")
-
-
-def save_prediction_record(prediction: dict[str, Any]) -> dict[str, Any]:
-    """Persist a prediction to the existing AIPrediction collection with audit metadata."""
-    uri = load_mongodb_uri()
-    client = MongoClient(uri, serverSelectionTimeoutMS=10_000)
-    try:
-        database = client.get_default_database()
-        if database is None:
-            database = client["hfap"]
-        collection = database["aipredictions"]
-        record = {
-            "userId": prediction.get("userId"),
-            "predictedRisk": prediction["predicted_risk"],
-            "confidence": float(prediction["confidence"]),
-            "modelVersion": prediction["model_version"],
-            "generatedAt": datetime.now(timezone.utc),
-        }
-        result = collection.insert_one(record)
-        return {"inserted_id": str(result.inserted_id), "record": record}
-    finally:
-        client.close()
-
-
 def validate_features(payload: Any) -> tuple[dict[str, Any] | None, list[str]]:
     if not isinstance(payload, dict):
         return None, ["Request body must be a JSON object."]
 
     missing = [feature for feature in MODEL_FEATURES if feature not in payload]
-    unknown = sorted(set(payload) - set(MODEL_FEATURES) - ALLOWED_EXTRA_FIELDS)
+    unknown = sorted(set(payload) - set(MODEL_FEATURES))
     errors: list[str] = []
     if missing:
         errors.append(f"Missing feature fields: {', '.join(missing)}.")
@@ -123,8 +87,6 @@ def validate_features(payload: Any) -> tuple[dict[str, Any] | None, list[str]]:
         errors.append(f"Unknown feature fields: {', '.join(unknown)}.")
 
     cleaned: dict[str, Any] = {}
-    if "userId" in payload:
-        cleaned["userId"] = payload["userId"]
 
     for feature in MODEL_FEATURES:
         value = payload.get(feature)
@@ -228,7 +190,6 @@ def predict() -> Any:
                         "been trained. Sufficient independently labeled employee data is unavailable."
                     ),
                     "model_available": False,
-                    "model_path": str(MODEL_PATH),
                 }
             ),
             503,
@@ -246,19 +207,6 @@ def predict() -> Any:
 
     if predicted_risk not in RISK_CLASSES:
         return jsonify({"error": "prediction_failed", "message": "Model returned an invalid risk category."}), 500
-
-    try:
-        save_prediction_record(
-            {
-                "userId": features.get("userId"),
-                "predicted_risk": predicted_risk,
-                "confidence": confidence,
-                "model_version": MODEL_VERSION,
-            }
-        )
-    except Exception as error:
-        app.logger.exception("Prediction persistence failed")
-        return jsonify({"error": "prediction_persistence_failed", "message": str(error)}), 500
 
     return jsonify(
         {

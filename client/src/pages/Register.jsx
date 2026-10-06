@@ -16,6 +16,7 @@ const Register = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -26,21 +27,22 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const { firstName, lastName, email, password } = formData;
+      const { firstName, lastName, password } = formData;
 
       const { data } = await api.post("/auth/register", {
-        firstName,
-        lastName,
-        email,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
         password,
       });
 
@@ -48,11 +50,9 @@ const Register = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      alert("Registration Successful!");
-
-      navigate("/dashboard");
+      navigate("/employee", { replace: true });
     } catch (err) {
-      alert(
+      setError(
         err.response?.data?.message ||
           "Registration failed. Please try again."
       );
@@ -85,6 +85,11 @@ const Register = () => {
           <p className="auth-subtitle">Join the Human Firewall Analytics Platform</p>
 
           <form onSubmit={handleRegister} className="auth-form">
+            {error && (
+              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            )}
             <div className="auth-name-row">
               <input
                 type="text"
@@ -93,6 +98,7 @@ const Register = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
+                maxLength={80}
                 className="auth-input"
               />
 
@@ -103,6 +109,7 @@ const Register = () => {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
+                maxLength={80}
                 className="auth-input"
               />
             </div>
@@ -114,6 +121,7 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              maxLength={254}
               className="auth-input"
             />
 

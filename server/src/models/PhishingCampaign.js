@@ -19,6 +19,13 @@ const phishingCampaignSchema = new mongoose.Schema({
     required: true,
   },
 
+  senderName: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100,
+  },
+
   targetDepartments: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department"

@@ -45,6 +45,7 @@ app.use("/api/risk-assessment", require("./routes/riskAssessmentRoutes"));
 app.use("/api/ai-predictions", require("./routes/aiPredictionRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/recommendations", require("./routes/recommendationRoutes"));
 app.use("/api/employee-progress", require("./routes/employeeProgressRoutes"));
 app.use("/api/leaderboard", require("./routes/leaderboardRoutes"));
 

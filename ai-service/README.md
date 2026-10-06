@@ -1,6 +1,6 @@
 # HFAP AI Service
 
-This service exposes the trained employee risk model through a small Flask API.
+This service exposes a validated employee-risk model through a small Flask API. It is stateless: the Node.js backend builds feature vectors, associates predictions with authenticated users, and persists successful predictions.
 
 ## Start the service
 
@@ -9,13 +9,15 @@ cd "C:\Users\nensi\OneDrive\Desktop\SGP\Human-Firewall-Analytics-Platform\ai-ser
 python app.py
 ```
 
-The API listens on port 8000 by default.
+The API listens on port 8000 by default. The default model path is the generated, git-ignored `ml/data/processed/risk_model.joblib`. The guarded trainer writes there only when it has sufficient real employee records and independent risk labels. The tracked models under `ml/models/` are not used by default because they are synthetic development artifacts.
+
+Set `HFAP_MODEL_PATH` only when deliberately deploying a separately validated model artifact. Do not point it at the synthetic development model.
 
 ## Health check
 
 ### GET /health
 
-Returns readiness information for the service and whether the model file exists.
+Returns readiness information for the service and whether the validated model file exists. The API can be healthy while prediction is unavailable because no eligible model has been trained.
 
 Example response:
 
@@ -33,20 +35,7 @@ Example response:
 ### POST /predict
 
 Accepts a JSON object containing the employee feature vector used by the model.
-Optional field:
-
-```json
-{
-  "userId": "64e1d7a5c9d3b1a41a2b3c4d"
-}
-```
-
-When a valid prediction is generated, the API also writes a record to the MongoDB `AIPrediction` collection with:
-- `userId` (when supplied)
-- `predictedRisk`
-- `confidence`
-- `modelVersion`
-- `generatedAt`
+The service accepts only the feature fields below. Unknown fields such as user IDs are rejected; identity and persistence remain the Node.js backend's responsibility.
 Required fields:
 
 ```json
@@ -99,14 +88,6 @@ Valid output:
 }
 ```
 
-When the API stores a prediction, the MongoDB record is shaped like:
+The Node.js backend stores successful predictions in the MongoDB `AIPrediction` collection with the authenticated employee ID, model version, confidence, and generation time. The Flask service itself does not access MongoDB.
 
-```json
-{
-  "userId": "64e1d7a5c9d3b1a41a2b3c4d",
-  "predictedRisk": "Low",
-  "confidence": 0.9634677116038652,
-  "modelVersion": "baseline-logistic-regression-v1",
-  "generatedAt": "2026-09-25T13:25:19.000Z"
-}
-```
+If no eligible model file exists, `/predict` responds with HTTP 503. Do not use synthetic training reports or model artifacts as evidence of real employee prediction performance.

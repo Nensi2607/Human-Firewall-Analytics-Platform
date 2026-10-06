@@ -20,19 +20,41 @@ const createTransporter = () => {
 
 const transporter = createTransporter();
 
-const sendPhishingEmail = async ({ to, subject, html }) => {
+const validateSenderName = (senderName) => {
+	if (typeof senderName !== "string" || !senderName.trim()) {
+		throw new Error("Sender display name is required.");
+	}
+
+	if (/[@<>\r\n]/.test(senderName) || senderName.includes("\0")) {
+		throw new Error("Sender display name must not contain email addresses or control characters.");
+	}
+
+	return senderName.trim();
+};
+
+const formatSenderAddress = (senderName, smtpUser) => {
+	return `"${validateSenderName(senderName)}" <${smtpUser}>`;
+};
+
+const verifyTransporter = async () => {
+	try {
+		await transporter.verify();
+		console.log("[SUCCESS] SMTP connected and ready to send");
+	} catch (error) {
+		console.log(`[ERROR] SMTP connection failed: ${error.message}`);
+	}
+};
+
+const sendPhishingEmail = async ({ to, subject, html, senderName }) => {
+	const smtpUser = process.env.SMTP_USER;
 	const result = await transporter.sendMail({
-		from: process.env.MAIL_FROM || process.env.SMTP_USER || "hfap@example.test",
+		from: formatSenderAddress(senderName, smtpUser),
 		to,
 		subject,
 		html,
 	});
 
-	if (!process.env.SMTP_HOST) {
-		console.log("Phishing simulation email preview:", result.message.toString());
-	}
-
 	return result;
 };
 
-module.exports = { sendPhishingEmail };
+module.exports = { sendPhishingEmail, verifyTransporter, validateSenderName, formatSenderAddress };

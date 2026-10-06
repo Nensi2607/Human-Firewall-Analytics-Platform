@@ -16,7 +16,8 @@ exports.register = async (req, res, next) => {
     } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(400).json({
@@ -29,7 +30,7 @@ exports.register = async (req, res, next) => {
     const user = await User.create({
       firstName,
       lastName,
-      email,
+      email: normalizedEmail,
       passwordHash: password,
       role: "employee",
       departmentId,
@@ -63,12 +64,20 @@ exports.login = async (req, res, next) => {
 
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select("+passwordHash");
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }).select("+passwordHash");
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
+      });
+    }
+
+    if (user.status === "inactive") {
+      return res.status(403).json({
+        success: false,
+        message: "This account is inactive. Contact your administrator.",
       });
     }
 
@@ -123,9 +132,9 @@ exports.getMe = async (req, res, next) => {
 // ===============================
 exports.forgotPassword = async (req, res, next) => {
   try {
-    res.status(200).json({
-      success: true,
-      message: "Forgot password feature will be implemented later."
+    res.status(501).json({
+      success: false,
+      message: "Password recovery is not configured. Contact your administrator.",
     });
   } catch (err) {
     next(err);
@@ -137,9 +146,9 @@ exports.forgotPassword = async (req, res, next) => {
 // ===============================
 exports.resetPassword = async (req, res, next) => {
   try {
-    res.status(200).json({
-      success: true,
-      message: "Reset password feature will be implemented later."
+    res.status(501).json({
+      success: false,
+      message: "Password recovery is not configured. Contact your administrator.",
     });
   } catch (err) {
     next(err);

@@ -1,29 +1,21 @@
 # Human-Firewall-Analytics-Platform
 
-## Progress
-
-### ✅ Completed
-- Backend setup
-- MongoDB Atlas integration
-- Department Model
-- User Model
-
-### 🚧 Next
-- Authentication APIs
-- JWT Authentication
-- Department CRUD
-
-# Human Firewall Analytics Platform (HFAP)
-
 ## Overview
 
 Human Firewall Analytics Platform (HFAP) is a cybersecurity awareness platform that evaluates employee security behavior through phishing simulations, quizzes, training modules, AI-based risk prediction, and analytics.
 
 ---
 
-## Known Limitations / Placeholders
+## Current Implementation
 
-- The Human Risk Score weighting and formula are currently placeholders for prototyping purposes. The final weighting and formula are a team decision and have not yet been finalized.
+HFAP includes role-based authentication, admin employee and department management, assigned quizzes, training progress, controlled phishing simulations, personal and organization analytics, recommendations, notifications, and client-generated PDF/Excel reports.
+
+## Operational Notes
+
+- Human Risk Score uses a transparent prototype formula. It is not a validated prediction and should be interpreted with its displayed component data.
+- The AI service serves only a model generated at `ml/data/processed/risk_model.joblib`. The guarded trainer requires sufficient real employee records and independent labels. Tracked model files are synthetic development artifacts and are not served by default.
+- Without SMTP configuration, phishing campaign launch generates a local preview only. It does not send email or create delivered simulation attempts.
+- Password recovery is not configured; inactive or locked-out users need administrator assistance.
 
 ---
 

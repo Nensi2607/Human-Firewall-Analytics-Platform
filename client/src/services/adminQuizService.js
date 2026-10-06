@@ -10,8 +10,23 @@ export const createQuiz = async (quiz) => {
   return response.data;
 };
 
+export const deleteQuiz = async (quizId) => {
+  const response = await api.delete(`/quizzes/${quizId}`);
+  return response.data;
+};
+
 export const createQuestion = async (quizId, question) => {
   const response = await api.post(`/questions/quiz/${quizId}`, question);
+  return response.data;
+};
+
+export const updateQuestion = async (questionId, question) => {
+  const response = await api.put(`/questions/${questionId}`, question);
+  return response.data;
+};
+
+export const deleteQuestion = async (questionId) => {
+  const response = await api.delete(`/questions/${questionId}`);
   return response.data;
 };
 
