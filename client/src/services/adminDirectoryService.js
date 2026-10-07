@@ -5,6 +5,11 @@ export const getEmployees = async () => {
   return response.data.data.filter((user) => user.role === "employee");
 };
 
+export const getEmployeeDetail = async (employeeId) => {
+  const response = await api.get(`/users/${employeeId}/detail`);
+  return response.data;
+};
+
 export const updateEmployee = async (employeeId, employee) => {
   const response = await api.put(`/users/${employeeId}`, employee);
   return response.data.data;

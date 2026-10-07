@@ -49,12 +49,20 @@ const escapeHtml = (value) =>
 	})[character]);
 
 const renderEmailTemplate = (template, trackingUrl) => {
-	const link = `<a href="${trackingUrl}">Review the security message</a>`;
+	const link = `
+		<a href="${trackingUrl}" style="color:#1a73e8; font-weight:600; text-decoration:underline;">
+			Verify your account
+		</a>
+	`;
 	const pixelUrl = trackingUrl.replace(/\/track\//, "/pixel/");
-	const parts = template.split("{{TRACKING_LINK}}");
-	const body = parts
-		.map((part) => escapeHtml(part).replace(/\r?\n/g, "<br>"))
-		.join(link);
+	const templateBody = (template || "").trim();
+	const hasTrackingLink = templateBody.includes("{{TRACKING_LINK}}");
+	const body = hasTrackingLink
+		? templateBody
+				.split("{{TRACKING_LINK}}")
+				.map((part) => escapeHtml(part).replace(/\r?\n/g, "<br>"))
+				.join(link)
+		: `This is a phishing awareness simulation. ${link}`;
 	return `<p>${body}</p><img src="${pixelUrl}" width="1" height="1" style="display:none;" alt="" />`;
 };
 
@@ -164,12 +172,14 @@ exports.getCampaigns = async (req, res, next) => {
 				const stat = statsByCampaign.get(String(campaign._id));
 				const targetedCount = stat?.targetedCount || 0;
 				const clickedCount = stat?.clickedCount || 0;
+				const reportedCount = stat?.reportedCount || 0;
+				const noResponseCount = Math.max(targetedCount - clickedCount - reportedCount, 0);
 				return {
 					...campaign,
 					targetedCount,
 					clickedCount,
-					reportedCount: stat?.reportedCount || 0,
-					ignoredCount: stat?.ignoredCount || 0,
+					reportedCount,
+					ignoredCount: noResponseCount,
 					clickRate: targetedCount ? Math.round((clickedCount / targetedCount) * 100) : 0,
 				};
 			})
@@ -311,13 +321,7 @@ exports.getCampaignStats = async (req, res, next) => {
 			.lean();
 		const clickedCount = attempts.filter((attempt) => attempt.clicked).length;
 		const reportedCount = attempts.filter((attempt) => attempt.reported).length;
-		const ignoredCount = attempts.filter(
-			(attempt) =>
-				attempt.expiresAt &&
-				attempt.expiresAt < new Date() &&
-				!attempt.clicked &&
-				!attempt.reported
-		).length;
+		const noResponseCount = Math.max(attempts.length - clickedCount - reportedCount, 0);
 
 		return res.status(200).json({
 			success: true,
@@ -326,7 +330,7 @@ exports.getCampaignStats = async (req, res, next) => {
 				targetedCount: attempts.length,
 				clickedCount,
 				reportedCount,
-				ignoredCount,
+				ignoredCount: noResponseCount,
 				clickRate: attempts.length ? Math.round((clickedCount / attempts.length) * 100) : 0,
 				employees: attempts.map((attempt) => ({
 					employee: attempt.employeeId,

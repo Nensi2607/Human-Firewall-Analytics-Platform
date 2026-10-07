@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDepartments, getEmployees, updateEmployee } from "../services/adminDirectoryService";
 import { getEmployeeProgress } from "../services/employeeProgressService";
 
@@ -8,6 +9,7 @@ const getDepartmentId = (employee) =>
   employee.departmentId?._id || employee.departmentId || "";
 
 const AdminEmployees = () => {
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
@@ -104,6 +106,10 @@ const AdminEmployees = () => {
     setError("");
   };
 
+  const openEmployeeDetail = (employeeId) => {
+    navigate(`/employees/${employeeId}`);
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
     if (!selectedEmployee || !form) return;
@@ -189,7 +195,7 @@ const AdminEmployees = () => {
                         <td className="px-3 py-3">{employee.departmentId?.departmentName || "Unassigned"}</td>
                         <td className="px-3 py-3">{employee.designation || "-"}</td>
                         <td className="px-3 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${employee.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{employee.status}</span></td>
-                        <td className="px-3 py-3"><button type="button" onClick={() => selectEmployee(employee)} className="font-semibold text-blue-700 hover:underline">View / edit</button></td>
+                        <td className="px-3 py-3"><button type="button" onClick={() => openEmployeeDetail(employee._id)} className="font-semibold text-blue-700 hover:underline">View / edit</button></td>
                       </tr>
                     ))}
                   </tbody>

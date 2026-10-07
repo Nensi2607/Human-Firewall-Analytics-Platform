@@ -17,6 +17,7 @@ import AdminQuizManagement from "../pages/AdminQuizManagement";
 import AdminPhishingCampaigns from "../pages/AdminPhishingCampaigns";
 import AdminTrainingManagement from "../pages/AdminTrainingManagement";
 import AdminEmployees from "../pages/AdminEmployees";
+import EmployeeDetail from "../pages/EmployeeDetail";
 import AdminDepartments from "../pages/AdminDepartments";
 import NotificationInbox from "../pages/NotificationInbox";
 import EmployeeProgress from "../pages/EmployeeProgress";
@@ -109,6 +110,10 @@ const AppRoutes = () => {
             <Route
               path="/employees"
               element={<AdminEmployees />}
+            />
+            <Route
+              path="/employees/:employeeId"
+              element={<EmployeeDetail />}
             />
           </Route>
 

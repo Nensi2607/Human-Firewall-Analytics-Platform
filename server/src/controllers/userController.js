@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const Department = require("../models/Department");
+const QuizResult = require("../models/QuizResult");
+const Training = require("../models/Training");
+const TrainingProgress = require("../models/TrainingProgress");
+const PhishingAttempt = require("../models/PhishingAttempt");
+const PhishingAwarenessResult = require("../models/PhishingAwarenessResult");
+const RiskAssessment = require("../models/RiskAssessment");
+const AIPrediction = require("../models/AIPrediction");
+const { buildEmployeeDetail } = require("../services/employeeDetailService");
 
 // ==========================================
 // Get Current Logged-in User Profile
@@ -72,6 +80,87 @@ exports.getUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: user,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getEmployeeDetail = async (req, res, next) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid employee ID.",
+      });
+    }
+
+    const [employee, departments, quizResults, trainingProgress, trainings, quizzes, phishingAttempts, phishingAwareness, riskAssessment, prediction] = await Promise.all([
+      User.findById(req.params.id)
+        .select("-passwordHash")
+        .populate("departmentId", "departmentName")
+        .lean(),
+      Department.find().select("_id departmentName").sort({ departmentName: 1 }).lean(),
+      QuizResult.find({ userId: req.params.id })
+        .select("quizId percentage correctAnswers totalQuestions submittedAt completedAt")
+        .populate("quizId", "title")
+        .sort({ completedAt: -1, submittedAt: -1 })
+        .lean(),
+      TrainingProgress.find({ userId: req.params.id })
+        .select("trainingId progress completed completedAt")
+        .populate("trainingId", "title")
+        .lean(),
+      Training.find().select("_id title").lean(),
+      QuizResult.aggregate([
+        {
+          $match: { userId: new mongoose.Types.ObjectId(req.params.id) },
+        },
+        {
+          $project: { _id: 1 },
+        },
+      ]),
+      PhishingAttempt.find({ userId: req.params.id })
+        .select("campaignId sentAt clicked clickedAt emailOpened emailOpenedAt reported reportedAt credentialsEntered")
+        .populate("campaignId", "title")
+        .sort({ sentAt: -1 })
+        .lean(),
+      PhishingAwarenessResult.findOne({ userId: req.params.id })
+        .select("totalScenarios correctAnswers score completedAt")
+        .lean(),
+      RiskAssessment.findOne({ userId: req.params.id })
+        .select("finalRiskScore riskLevel trainingScore quizScore phishingScore securityAwarenessScore assessedAt")
+        .lean(),
+      AIPrediction.findOne({ userId: req.params.id })
+        .select("predictedRisk confidence modelVersion generatedAt")
+        .sort({ generatedAt: -1 })
+        .lean(),
+    ]);
+
+    if (!employee || employee.role !== "employee") {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const details = buildEmployeeDetail({
+      employee,
+      quizResults,
+      trainingProgress,
+      trainings,
+      quizzes: quizzes.map((quiz) => ({ _id: quiz._id, title: quiz.title })),
+      phishingAttempts,
+      phishingAwareness,
+      riskAssessment,
+      prediction,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...details,
+        departments,
+      },
     });
   } catch (err) {
     next(err);

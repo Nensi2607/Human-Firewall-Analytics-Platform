@@ -5,6 +5,11 @@ const {
 	createAdminPhishingNotification,
 	createUserNotification,
 } = require("../services/notificationService");
+const { calculateRiskAssessment } = require("../services/riskAssessmentService");
+
+const refreshEmployeeRisk = async (userId) => {
+	await calculateRiskAssessment(userId);
+};
 
 exports.getMyPhishingAttempts = async (req, res, next) => {
 	try {
@@ -60,11 +65,20 @@ exports.reportMyPhishingAttempt = async (req, res, next) => {
 
 		const employee = await User.findById(req.user._id).select("firstName lastName").lean();
 		const campaign = attempt.campaignId;
-		await createAdminPhishingNotification({
-			employee,
-			campaign,
-			event: "reported",
-		});
+		await Promise.all([
+			createAdminPhishingNotification({
+				employee,
+				campaign,
+				event: "reported",
+			}),
+			createUserNotification({
+				userId: req.user._id,
+				title: "Phishing simulation reported",
+				message: `You reported the ${campaign.title} simulation message as suspicious.`,
+				type: "success",
+			}),
+			refreshEmployeeRisk(req.user._id),
+		]);
 
 		return res.status(200).json({ success: true, data: attempt });
 	} catch (err) {
@@ -78,6 +92,7 @@ const getAwarenessUrl = () =>
 
 exports.trackPhishingAttempt = async (req, res, next) => {
 	try {
+		console.log("[phishing-click] incoming token:", req.params.token);
 		const attempt = await PhishingAttempt.findOne({ token: req.params.token });
 
 		if (!attempt || (attempt.expiresAt && attempt.expiresAt <= new Date())) {
@@ -101,11 +116,20 @@ exports.trackPhishingAttempt = async (req, res, next) => {
 			if (updateResult.modifiedCount > 0) {
 				const employee = await User.findById(attempt.userId).select("firstName lastName").lean();
 				const campaign = await PhishingAttempt.populate(attempt, "campaignId");
-				await createAdminPhishingNotification({
-					employee,
-					campaign: campaign.campaignId,
-					event: "clicked",
-				});
+				await Promise.all([
+					createAdminPhishingNotification({
+						employee,
+						campaign: campaign.campaignId,
+						event: "clicked",
+					}),
+					createUserNotification({
+						userId: attempt.userId,
+						title: "Phishing simulation link clicked",
+						message: `You clicked the ${campaign.campaignId.title} simulation link.`,
+						type: "alert",
+					}),
+					refreshEmployeeRisk(attempt.userId),
+				]);
 			}
 		}
 
@@ -133,11 +157,20 @@ exports.trackOpenPixel = async (req, res, next) => {
 			if (updateResult.modifiedCount > 0) {
 				const employee = await User.findById(attempt.userId).select("firstName lastName").lean();
 				const campaign = await PhishingAttempt.populate(attempt, "campaignId");
-				await createAdminPhishingNotification({
-					employee,
-					campaign: campaign.campaignId,
-					event: "opened",
-				});
+				await Promise.all([
+					createAdminPhishingNotification({
+						employee,
+						campaign: campaign.campaignId,
+						event: "opened",
+					}),
+					createUserNotification({
+						userId: attempt.userId,
+						title: "Phishing simulation opened",
+						message: `You opened the ${campaign.campaignId.title} simulation email.`,
+						type: "info",
+					}),
+					refreshEmployeeRisk(attempt.userId),
+				]);
 			}
 		}
 

@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = Path(
     os.getenv(
         "HFAP_MODEL_PATH",
-        ROOT / "ml" / "data" / "processed" / "risk_model.joblib",
+        ROOT / "ml" / "models" / "risk_model.joblib",
     )
 )
 MODEL_VERSION = "baseline-logistic-regression-v1"

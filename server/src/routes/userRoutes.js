@@ -4,6 +4,7 @@ const {
   getCurrentUserProfile,
   getUsers,
   getUser,
+  getEmployeeDetail,
   updateUser,
   deleteUser,
 } = require("../controllers/userController");
@@ -17,6 +18,7 @@ router.get("/me", protect, getCurrentUserProfile);
 // Shared list for authenticated users; mutations remain admin-only.
 router.get("/", protect, authorize("admin"), getUsers);
 
+router.get("/:id/detail", protect, authorize("admin"), getEmployeeDetail);
 router.get("/:id", protect, authorize("admin"), getUser);
 
 router.put("/:id", protect, authorize("admin"), updateUser);
