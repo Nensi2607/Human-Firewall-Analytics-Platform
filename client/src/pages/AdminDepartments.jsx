@@ -136,72 +136,115 @@ const AdminDepartments = () => {
   };
 
   return (
-    <section className="mx-auto max-w-7xl space-y-7">
-      <header className="border-b border-slate-200 pb-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Admin workspace</p>
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">Departments</h1>
-        <p className="mt-2 text-slate-600">{departments.length} departments · {employees.length} employees</p>
+    <section className="admin-quiz-page department-page-shell">
+      <header className="admin-page-header department-page-header-block">
+        <p className="section-kicker admin-page-kicker">Admin workspace</p>
+        <h1 className="admin-page-title">Departments</h1>
+        <p className="admin-page-subtitle">{departments.length} departments · {employees.length} employees</p>
       </header>
 
-      {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      {message && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
+      {error && <p role="alert" className="admin-alert admin-alert-error">{error}</p>}
+      {message && <p role="status" className="admin-alert admin-alert-success">{message}</p>}
 
-      {loading ? <p role="status" className="py-8 text-slate-500">Loading departments...</p> : error && departments.length === 0 ? (
-        <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700">Retry</button>
+      {loading ? <p role="status" className="empty-state">Loading departments...</p> : error && departments.length === 0 ? (
+        <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="admin-secondary-button department-retry-button">Retry</button>
       ) : (
         <>
-          <form onSubmit={handleSubmit} className="space-y-4 border-b border-slate-200 pb-7">
-            <div className="flex flex-wrap items-end justify-between gap-3">
+          <form onSubmit={handleSubmit} className="admin-card department-form-card">
+            <div className="admin-section-header department-header-row">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">{editingId ? "Edit department" : "Create department"}</h2>
-                <p className="mt-1 text-sm text-slate-500">Departments with existing employee or campaign assignments cannot be deleted.</p>
+                <h2>{editingId ? "Edit department" : "Create department"}</h2>
+                <p>Departments with existing employee or campaign assignments cannot be deleted.</p>
               </div>
-              {editingId && <button type="button" onClick={resetForm} className="text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel edit</button>}
+              {editingId && <button type="button" onClick={resetForm} className="admin-link-button">Cancel edit</button>}
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-700">Department name<input required maxLength={120} value={form.departmentName} onChange={(event) => setForm({ ...form, departmentName: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /></label>
-              <label className="text-sm font-semibold text-slate-700">Manager<select value={form.manager} onChange={(event) => setForm({ ...form, manager: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"><option value="">No manager</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.firstName} {employee.lastName}</option>)}</select></label>
-              <label className="text-sm font-semibold text-slate-700 md:col-span-2">Description<textarea maxLength={500} rows="2" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /></label>
-              {editingId && <label className="text-sm font-semibold text-slate-700">Status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>}
+            <div className="admin-form-grid">
+              <label className="admin-form-field">
+                <span>Department name</span>
+                <input required maxLength={120} value={form.departmentName} onChange={(event) => setForm({ ...form, departmentName: event.target.value })} />
+              </label>
+              <label className="admin-form-field">
+                <span>Manager</span>
+                <select value={form.manager} onChange={(event) => setForm({ ...form, manager: event.target.value })} className="admin-select-field">
+                  <option value="">No manager</option>
+                  {employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.firstName} {employee.lastName}</option>)}
+                </select>
+              </label>
+              <label className="admin-form-field admin-form-field-full">
+                <span>Description</span>
+                <textarea maxLength={500} rows="2" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+              </label>
+              {editingId && <label className="admin-form-field">
+                <span>Status</span>
+                <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} className="admin-select-field">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </label>}
             </div>
-            <button type="submit" disabled={saving} className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{saving ? "Saving..." : editingId ? "Save changes" : "Create department"}</button>
+            <button type="submit" disabled={saving} className="admin-primary-button department-submit-button">{saving ? "Saving..." : editingId ? "Save changes" : "Create department"}</button>
           </form>
 
-          {departments.length === 0 ? <p className="py-8 text-slate-500">No departments have been created yet.</p> : (
-            <div className="overflow-x-auto border-y border-slate-200">
-              <table className="w-full min-w-[920px] text-left text-sm">
-                <thead className="border-b border-slate-200 text-xs uppercase text-slate-500"><tr><th className="px-3 py-3">Department</th><th className="px-3 py-3">Employees</th><th className="px-3 py-3">Average risk</th><th className="px-3 py-3">Quiz</th><th className="px-3 py-3">Training</th><th className="px-3 py-3">Phishing</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">Actions</th></tr></thead>
-                <tbody>{departments.map((department) => {
-                  const metric = getMetrics(department);
-                  const employeeCount = employees.filter((employee) => String(employee.departmentId?._id || employee.departmentId || "") === department._id).length;
-                  const manager = department.manager;
-                  return (
-                    <tr key={department._id} className="border-b border-slate-100 last:border-0">
-                      <td className="px-3 py-3"><span className="block font-semibold text-slate-900">{department.departmentName}</span><span className="text-slate-500">{manager ? `${manager.firstName} ${manager.lastName}` : "No manager"}</span></td>
-                      <td className="px-3 py-3">{employeeCount}</td>
-                      <td className="px-3 py-3">{metric?.averageRiskScore == null ? "No assessment data" : `${metric.averageRiskScore}%`}</td>
-                      <td className="px-3 py-3">{metric?.averageQuizScore == null ? "-" : `${metric.averageQuizScore}%`}</td>
-                      <td className="px-3 py-3">{metric?.averageTrainingScore == null ? "-" : `${metric.averageTrainingScore}%`}</td>
-                      <td className="px-3 py-3">{metric?.averagePhishingScore == null ? "-" : `${metric.averagePhishingScore}%`}</td>
-                      <td className="px-3 py-3 capitalize">{department.status}</td>
-                      <td className="px-3 py-3"><div className="flex gap-3"><button type="button" onClick={() => setSelectedId(selectedId === department._id ? "" : department._id)} className="font-semibold text-blue-700 hover:underline">Employees</button><button type="button" onClick={() => handleEdit(department)} className="font-semibold text-slate-700 hover:underline">Edit</button><button type="button" disabled={deletingId === department._id} onClick={() => handleDelete(department)} className="font-semibold text-red-700 hover:underline disabled:opacity-50">{deletingId === department._id ? "Deleting..." : "Delete"}</button></div></td>
+          {departments.length === 0 ? <p className="empty-state">No departments have been created yet.</p> : (
+            <div className="admin-card admin-table-card department-table-card">
+              <div className="admin-section-header department-table-header">
+                <h2>Department overview</h2>
+              </div>
+              <div className="admin-table-wrap">
+                <table className="admin-quiz-table department-table">
+                  <thead>
+                    <tr>
+                      <th>Department</th>
+                      <th>Employees</th>
+                      <th>Average risk</th>
+                      <th>Quiz</th>
+                      <th>Training</th>
+                      <th>Phishing</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
-                  );
-                })}</tbody>
-              </table>
+                  </thead>
+                  <tbody>{departments.map((department) => {
+                    const metric = getMetrics(department);
+                    const employeeCount = employees.filter((employee) => String(employee.departmentId?._id || employee.departmentId || "") === department._id).length;
+                    const manager = department.manager;
+                    return (
+                      <tr key={department._id}>
+                        <td>
+                          <span className="department-name">{department.departmentName}</span>
+                          <span className="department-manager">{manager ? `${manager.firstName} ${manager.lastName}` : "No manager"}</span>
+                        </td>
+                        <td>{employeeCount}</td>
+                        <td>{metric?.averageRiskScore == null ? "No assessment data" : `${metric.averageRiskScore}%`}</td>
+                        <td>{metric?.averageQuizScore == null ? "-" : `${metric.averageQuizScore}%`}</td>
+                        <td>{metric?.averageTrainingScore == null ? "-" : `${metric.averageTrainingScore}%`}</td>
+                        <td>{metric?.averagePhishingScore == null ? "-" : `${metric.averagePhishingScore}%`}</td>
+                        <td className="department-status">{department.status}</td>
+                        <td>
+                          <div className="department-actions">
+                            <button type="button" onClick={() => setSelectedId(selectedId === department._id ? "" : department._id)} className="department-link-button">Employees</button>
+                            <button type="button" onClick={() => handleEdit(department)} className="department-link-button">Edit</button>
+                            <button type="button" disabled={deletingId === department._id} onClick={() => handleDelete(department)} className="department-delete-button">{deletingId === department._id ? "Deleting..." : "Delete"}</button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}</tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {selectedDepartment && (
-            <section className="border-t border-slate-200 pt-5">
-              <h2 className="text-lg font-semibold text-slate-900">{selectedDepartment.departmentName} employees</h2>
+            <section className="admin-card department-detail-card">
+              <h2 className="admin-section-title">{selectedDepartment.departmentName} employees</h2>
               {getMetrics(selectedDepartment) && (
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="department-risk-summary">
                   Risk distribution: High {getMetrics(selectedDepartment).highRisk}, Medium {getMetrics(selectedDepartment).mediumRisk}, Low {getMetrics(selectedDepartment).lowRisk}.
                 </p>
               )}
-              {departmentMembers.length === 0 ? <p className="mt-3 text-sm text-slate-500">No employees are assigned to this department.</p> : (
-                <ul className="mt-3 divide-y divide-slate-200">{departmentMembers.map((employee) => <li key={employee._id} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span className="font-medium text-slate-800">{employee.firstName} {employee.lastName}</span><span className="text-slate-500">{employee.email}</span></li>)}</ul>
+              {departmentMembers.length === 0 ? <p className="empty-state">No employees are assigned to this department.</p> : (
+                <ul className="department-member-list">{departmentMembers.map((employee) => <li key={employee._id}><span>{employee.firstName} {employee.lastName}</span><span>{employee.email}</span></li>)}</ul>
               )}
             </section>
           )}

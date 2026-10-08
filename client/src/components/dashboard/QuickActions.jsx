@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
 const actions = [
-  { label: "Create Campaign", to: "/admin/phishing", tone: "#2563eb" },
-  { label: "Review Employees", to: "/employees", tone: "#10b981" },
-  { label: "Manage Quizzes", to: "/admin/quizzes", tone: "#f59e0b" },
+  { label: "Create Campaign", to: "/admin/phishing" },
+  { label: "Review Employees", to: "/employees" },
+  { label: "Manage Quizzes", to: "/admin/quizzes" },
 ];
 
 const QuickActions = () => {
@@ -19,7 +19,7 @@ const QuickActions = () => {
             key={action.label}
             to={action.to}
             className="quick-action"
-            style={{ color: action.tone, borderColor: `${action.tone}25` }}
+            style={{ borderColor: "rgba(148, 163, 184, 0.22)" }}
           >
             {action.label}
           </Link>

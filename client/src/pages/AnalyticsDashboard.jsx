@@ -213,26 +213,24 @@ function AnalyticsDashboard() {
 
       <form
         onSubmit={handleApplyFilters}
-        className="mb-6 grid gap-4 border-y border-slate-200 py-5 sm:grid-cols-2 lg:grid-cols-4"
+        className="analytics-filter-form"
       >
-        <label className="text-sm font-semibold text-slate-700">
-          Employee
+        <label className="analytics-filter-field">
+          <span>Employee</span>
           <input
             name="employee"
             type="search"
             value={filterDraft.employee}
             onChange={handleFilterChange}
             placeholder="Name or email"
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
           />
         </label>
-        <label className="text-sm font-semibold text-slate-700">
-          Department
+        <label className="analytics-filter-field">
+          <span>Department</span>
           <select
             name="departmentId"
             value={filterDraft.departmentId}
             onChange={handleFilterChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
           >
             <option value="">All departments</option>
             {departments.map((department) => (
@@ -242,13 +240,12 @@ function AnalyticsDashboard() {
             ))}
           </select>
         </label>
-        <label className="text-sm font-semibold text-slate-700">
-          Risk level
+        <label className="analytics-filter-field">
+          <span>Risk level</span>
           <select
             name="riskLevel"
             value={filterDraft.riskLevel}
             onChange={handleFilterChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
           >
             <option value="">All risk levels</option>
             <option value="Low">Low</option>
@@ -256,9 +253,9 @@ function AnalyticsDashboard() {
             <option value="High">High</option>
           </select>
         </label>
-        <fieldset className="text-sm font-semibold text-slate-700">
+        <fieldset className="analytics-filter-field analytics-filter-range">
           <legend>Average quiz score (%)</legend>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="analytics-range-inputs">
             <input
               name="minQuizPercentage"
               type="number"
@@ -268,7 +265,6 @@ function AnalyticsDashboard() {
               onChange={handleFilterChange}
               placeholder="Min"
               aria-label="Minimum average quiz score"
-              className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
             />
             <span aria-hidden="true">to</span>
             <input
@@ -280,17 +276,15 @@ function AnalyticsDashboard() {
               onChange={handleFilterChange}
               placeholder="Max"
               aria-label="Maximum average quiz score"
-              className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
             />
           </div>
         </fieldset>
-        <label className="text-sm font-semibold text-slate-700">
-          Training status
+        <label className="analytics-filter-field">
+          <span>Training status</span>
           <select
             name="trainingStatus"
             value={filterDraft.trainingStatus}
             onChange={handleFilterChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
           >
             <option value="">All training statuses</option>
             <option value="completed">Completed all</option>
@@ -298,13 +292,12 @@ function AnalyticsDashboard() {
             <option value="not-started">Not started</option>
           </select>
         </label>
-        <label className="text-sm font-semibold text-slate-700">
-          Phishing result
+        <label className="analytics-filter-field">
+          <span>Phishing result</span>
           <select
             name="phishingResult"
             value={filterDraft.phishingResult}
             onChange={handleFilterChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
           >
             <option value="">All results</option>
             <option value="clicked">Clicked or entered credentials</option>
@@ -313,18 +306,11 @@ function AnalyticsDashboard() {
             <option value="no-attempt">No simulation attempt</option>
           </select>
         </label>
-        <div className="flex items-end gap-2 lg:col-span-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800"
-          >
+        <div className="analytics-filter-actions">
+          <button type="submit" className="analytics-filter-submit">
             Apply filters
           </button>
-          <button
-            type="button"
-            onClick={handleResetFilters}
-            className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
-          >
+          <button type="button" onClick={handleResetFilters} className="analytics-filter-reset">
             Reset
           </button>
         </div>

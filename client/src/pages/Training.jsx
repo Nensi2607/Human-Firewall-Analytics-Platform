@@ -88,49 +88,38 @@ const Training = () => {
   };
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <section className="mb-8">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">
-          Security Module
-        </p>
-        <h1 className="text-3xl font-bold text-slate-900">Training Module</h1>
-        <p className="mt-3 max-w-2xl text-slate-600">
+    <div className="training-page-shell">
+      <section className="training-page-header">
+        <h1>Training Module</h1>
+        <p>
           Complete cybersecurity training and build safer everyday habits.
         </p>
       </section>
 
       {loading ? (
-        <p className="rounded-xl bg-white p-6 text-slate-600 shadow-sm">
-          Loading training...
-        </p>
+        <p className="training-state-card">Loading training...</p>
       ) : error ? (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="font-semibold text-red-600">{error}</p>
+        <div className="training-state-card training-error-card">
+          <p>{error}</p>
           <button
             type="button"
             onClick={() => setRetryCount((count) => count + 1)}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
+            className="quiz-primary-button training-retry-button"
           >
             Retry
           </button>
         </div>
       ) : trainings.length === 0 ? (
-        <div className="rounded-xl bg-white p-6 text-slate-600 shadow-sm">
-          No training is available yet.
-        </div>
+        <div className="training-state-card">No training is available yet.</div>
       ) : (
         <>
           {completionError && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-              {completionError}
-            </div>
+            <div className="training-alert">{completionError}</div>
           )}
 
-          <section>
-            <h2 className="mb-4 text-xl font-semibold text-slate-800">
-              Learning Materials
-            </h2>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <section className="training-section">
+            <h2 className="panel-title">Learning Materials</h2>
+            <div className="training-grid">
               {trainings.map((training) => {
                 const trainingId = training._id;
                 const progress = progressByTraining[trainingId];
@@ -144,65 +133,46 @@ const Training = () => {
                   : ["Review the training material carefully."];
 
                 return (
-                  <article
-                    key={trainingId}
-                    className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-xl font-semibold text-slate-900">
-                          {training.title}
-                        </h3>
-                        <p className="mt-2 text-slate-600">
-                          {training.description}
-                        </p>
+                  <article key={trainingId} className="training-card">
+                    <div className="training-card-header">
+                      <div className="training-card-copy">
+                        <h3>{training.title}</h3>
+                        <p>{training.description}</p>
                       </div>
-                      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                      <span className="training-card-type">
                         {training.type || "Training"}
                       </span>
                     </div>
 
-                    <div className="mt-5 flex items-center justify-between text-sm text-slate-500">
+                    <div className="training-card-meta">
                       <span>
                         {training.duration
                           ? `${training.duration} minutes`
                           : "Self-paced"}
                       </span>
-                      <span
-                        className={
-                          isCompleted ? "font-semibold text-emerald-600" : ""
-                        }
-                      >
-                        {isCompleted
-                          ? "Completed"
-                          : `${progressValue}% complete`}
+                      <span className={isCompleted ? "training-complete" : ""}>
+                        {isCompleted ? "Completed" : `${progressValue}% complete`}
                       </span>
                     </div>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div className="training-progress-track">
                       <div
-                        className="h-full rounded-full bg-emerald-500 transition-all"
+                        className="training-progress-bar"
                         style={{ width: `${progressValue}%` }}
                       />
                     </div>
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setSelectedTrainingId(
-                          isSelected ? null : trainingId
-                        )
-                      }
-                      className="mt-5 rounded-lg border border-blue-200 px-4 py-2 font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-50"
+                      onClick={() => setSelectedTrainingId(isSelected ? null : trainingId)}
+                      className="training-toggle-button"
                     >
                       {isSelected ? "Hide Training" : "Start Training"}
                     </button>
 
                     {isSelected && (
-                      <div className="mt-5 border-t border-slate-200 pt-5">
-                        <h4 className="font-semibold text-slate-800">
-                          Review this training
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                      <div className="training-detail-panel">
+                        <h4>Review this training</h4>
+                        <ul>
                           {content.map((item) => (
                             <li key={item}>- {item}</li>
                           ))}
@@ -212,14 +182,14 @@ const Training = () => {
                             href={training.resourceURL}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-4 inline-block font-semibold text-blue-700 underline"
+                            className="training-resource-link"
                           >
                             Open training resource
                           </a>
                         )}
 
                         {isCompleted ? (
-                          <p className="mt-5 font-semibold text-emerald-600">
+                          <p className="training-completion-text">
                             ✓ Training completed
                           </p>
                         ) : (
@@ -227,11 +197,9 @@ const Training = () => {
                             type="button"
                             onClick={() => handleComplete(trainingId)}
                             disabled={completingId === trainingId}
-                            className="mt-5 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="training-complete-button"
                           >
-                            {completingId === trainingId
-                              ? "Saving..."
-                              : "Mark as Complete"}
+                            {completingId === trainingId ? "Saving..." : "Mark as Complete"}
                           </button>
                         )}
                       </div>
@@ -242,18 +210,13 @@ const Training = () => {
             </div>
           </section>
 
-          <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-800">
-              Cyber Security Quiz
-            </h2>
-            <p className="mt-2 text-slate-600">
+          <section className="training-quiz-box">
+            <h2>Cyber Security Quiz</h2>
+            <p>
               Test your cybersecurity awareness after reviewing the training
               material.
             </p>
-            <Link
-              to="/training/quiz"
-              className="mt-5 inline-block rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
-            >
+            <Link to="/training/quiz" className="training-quiz-link">
               Start Quiz
             </Link>
           </section>

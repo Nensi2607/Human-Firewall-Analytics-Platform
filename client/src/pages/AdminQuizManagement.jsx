@@ -272,46 +272,46 @@ const AdminQuizManagement = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Admin Workspace</p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">Quiz Management</h1>
-        <p className="mt-2 text-slate-600">Create assigned quizzes with their questions in one workflow.</p>
+    <div className="admin-quiz-page">
+      <header className="admin-page-header">
+        <p className="section-kicker admin-page-kicker">Admin Workspace</p>
+        <h1 className="admin-page-title">Quiz Management</h1>
+        <p className="admin-page-subtitle">Create assigned quizzes with their questions in one workflow.</p>
       </header>
 
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 font-medium text-red-700">{error}</div>}
-      {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 font-medium text-emerald-700">{message}</div>}
+      {error && <div className="admin-alert admin-alert-error">{error}</div>}
+      {message && <div className="admin-alert admin-alert-success">{message}</div>}
 
-      <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <div className="grid gap-5 md:grid-cols-2">
-          <label className="md:col-span-2">
-            <span className="text-sm font-semibold text-slate-700">Quiz title</span>
-            <input className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
+      <form onSubmit={handleSubmit} className="admin-card admin-form-card">
+        <div className="admin-form-grid">
+          <label className="admin-form-field admin-form-field-full">
+            <span>Quiz title</span>
+            <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
           </label>
-          <label className="md:col-span-2">
-            <span className="text-sm font-semibold text-slate-700">Description</span>
-            <textarea className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2" rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+          <label className="admin-form-field admin-form-field-full">
+            <span>Description</span>
+            <textarea rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
           </label>
         </div>
 
-        <div className="mt-8 border-t border-slate-200 pt-6">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-bold text-slate-900">Questions</h2>
-            <button type="button" onClick={() => setQuestions([...questions, newQuestion()])} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"><Plus size={16} /> Add question</button>
+        <div className="admin-panel-divider">
+          <div className="admin-section-header">
+            <h2>Questions</h2>
+            <button type="button" onClick={() => setQuestions([...questions, newQuestion()])} className="admin-add-button"><Plus size={16} /> Add question</button>
           </div>
-          <div className="mt-5 space-y-5">
+          <div className="admin-question-stack">
             {questions.map((item, questionIndex) => (
-              <fieldset key={questionIndex} className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <legend className="font-semibold text-slate-800">Question {questionIndex + 1}</legend>
-                  {questions.length > 1 && <button type="button" onClick={() => setQuestions(questions.filter((_, index) => index !== questionIndex))} className="inline-flex items-center gap-1 text-sm font-semibold text-red-600"><Trash2 size={15} /> Remove</button>}
+              <fieldset key={questionIndex} className="admin-question-card">
+                <div className="admin-question-head">
+                  <legend>Question {questionIndex + 1}</legend>
+                  {questions.length > 1 && <button type="button" onClick={() => setQuestions(questions.filter((_, index) => index !== questionIndex))} className="admin-remove-button"><Trash2 size={15} /> Remove</button>}
                 </div>
-                <input className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Question text" value={item.question} onChange={(event) => updateQuestion(questionIndex, "question", event.target.value)} required />
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <input placeholder="Question text" value={item.question} onChange={(event) => updateQuestion(questionIndex, "question", event.target.value)} required />
+                <div className="admin-answer-grid">
                   {item.options.map((option, optionIndex) => (
-                    <div key={optionIndex} className="flex gap-2">
-                      <input className="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder={`Answer option ${optionIndex + 1}`} value={option} onChange={(event) => updateOption(questionIndex, optionIndex, event.target.value)} required />
-                      <button type="button" onClick={() => updateQuestion(questionIndex, "correctAnswer", option)} className={`rounded-lg px-3 text-xs font-semibold ${item.correctAnswer === option && option ? "bg-emerald-600 text-white" : "border border-slate-300 bg-white text-slate-600"}`}>Correct</button>
+                    <div key={optionIndex} className="admin-answer-row">
+                      <input placeholder={`Answer option ${optionIndex + 1}`} value={option} onChange={(event) => updateOption(questionIndex, optionIndex, event.target.value)} required />
+                      <button type="button" onClick={() => updateQuestion(questionIndex, "correctAnswer", option)} className={`admin-correct-button ${item.correctAnswer === option && option ? "is-correct" : ""}`}>Correct</button>
                     </div>
                   ))}
                 </div>
@@ -320,70 +320,79 @@ const AdminQuizManagement = () => {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-slate-200 pt-6">
-          <h2 className="text-xl font-bold text-slate-900">Assignment</h2>
-          <div className="mt-3 flex gap-2">
-            <button type="button" onClick={() => setAssignmentMode("employees")} className={`rounded-lg px-4 py-2 text-sm font-semibold ${assignmentMode === "employees" ? "bg-blue-600 text-white" : "border border-slate-300 text-slate-700"}`}>Specific employees</button>
-            <button type="button" onClick={() => setAssignmentMode("department")} className={`rounded-lg px-4 py-2 text-sm font-semibold ${assignmentMode === "department" ? "bg-blue-600 text-white" : "border border-slate-300 text-slate-700"}`}>Department</button>
+        <div className="admin-panel-divider">
+          <h2 className="admin-section-title">Assignment</h2>
+          <div className="admin-assignment-toggle-group">
+            <button type="button" onClick={() => setAssignmentMode("employees")} className={`admin-assignment-toggle ${assignmentMode === "employees" ? "active" : ""}`}>Specific employees</button>
+            <button type="button" onClick={() => setAssignmentMode("department")} className={`admin-assignment-toggle ${assignmentMode === "department" ? "active" : ""}`}>Department</button>
           </div>
           {assignmentMode === "department" ? (
-            <select className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2" value={selectedDepartment} onChange={(event) => setSelectedDepartment(event.target.value)}>
+            <select className="admin-select-field" value={selectedDepartment} onChange={(event) => setSelectedDepartment(event.target.value)}>
               <option value="">Select a department</option>
               {departments.map((department) => <option key={department._id} value={department._id}>{department.departmentName}</option>)}
             </select>
           ) : (
-            <div className="mt-4 grid max-h-48 gap-2 overflow-y-auto rounded-lg border border-slate-200 p-3 md:grid-cols-2">
-              {employees.map((employee) => <label key={employee._id} className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={selectedEmployees.includes(employee._id)} onChange={() => toggleEmployee(employee._id)} />{employee.firstName} {employee.lastName} ({employee.email})</label>)}
-              {employees.length === 0 && <p className="text-sm text-slate-500">No employee records available.</p>}
+            <div className="admin-assignment-list">
+              {employees.map((employee) => <label key={employee._id} className="admin-assignment-item"><input type="checkbox" checked={selectedEmployees.includes(employee._id)} onChange={() => toggleEmployee(employee._id)} />{employee.firstName} {employee.lastName} ({employee.email})</label>)}
+              {employees.length === 0 && <p className="admin-empty-text">No employee records available.</p>}
             </div>
           )}
         </div>
 
-        <button type="submit" disabled={submitting} className="mt-8 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">{submitting ? "Creating quiz..." : "Create quiz"}</button>
+        <button type="submit" disabled={submitting} className="admin-primary-button">{submitting ? "Creating quiz..." : "Create quiz"}</button>
       </form>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-xl font-bold text-slate-900">Existing quizzes</h2>
-        {loading ? <p className="mt-4 text-slate-500">Loading quizzes...</p> : quizzes.length === 0 ? <p className="mt-4 text-slate-500">No quizzes have been created yet.</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead className="border-b border-slate-200 text-slate-500"><tr><th className="px-3 py-3">Title</th><th className="px-3 py-3">Questions</th><th className="px-3 py-3">Assigned employees</th><th className="px-3 py-3">Created</th><th className="px-3 py-3">Actions</th></tr></thead><tbody>{quizzes.map((quiz) => <tr key={quiz._id} className="border-b border-slate-100"><td className="px-3 py-3 font-semibold text-slate-800">{quiz.title}</td><td className="px-3 py-3">{questionCounts[quiz._id] ?? "-"}</td><td className="px-3 py-3">{getAssignedEmployeeCount(quiz, employees)}</td><td className="px-3 py-3">{quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString() : "-"}</td><td className="px-3 py-3"><div className="flex gap-3"><button type="button" onClick={() => handleManageQuestions(quiz)} className="font-semibold text-blue-700 hover:underline">Questions</button><button type="button" disabled={deletingQuizId === quiz._id} onClick={() => handleDeleteQuiz(quiz)} className="font-semibold text-red-700 hover:underline disabled:opacity-50">{deletingQuizId === quiz._id ? "Deleting..." : "Delete"}</button></div></td></tr>)}</tbody></table></div>}
+      <section className="admin-card admin-table-card">
+        <h2 className="admin-section-title">Existing quizzes</h2>
+        {loading ? <p className="admin-empty-text mt-4">Loading quizzes...</p> : quizzes.length === 0 ? <p className="admin-empty-text mt-4">No quizzes have been created yet.</p> : <div className="admin-table-wrap"><table className="admin-quiz-table"><thead><tr><th>Title</th><th>Questions</th><th>Assigned employees</th><th>Created</th><th>Actions</th></tr></thead><tbody>{quizzes.map((quiz) => <tr key={quiz._id}><td className="admin-quiz-title-cell">{quiz.title}</td><td>{questionCounts[quiz._id] ?? "-"}</td><td>{getAssignedEmployeeCount(quiz, employees)}</td><td>{quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString() : "-"}</td><td><div className="admin-table-actions"><button type="button" onClick={() => handleManageQuestions(quiz)} className="admin-link-button">Questions</button><button type="button" disabled={deletingQuizId === quiz._id} onClick={() => handleDeleteQuiz(quiz)} className="admin-link-button admin-link-button-danger">{deletingQuizId === quiz._id ? "Deleting..." : "Delete"}</button></div></td></tr>)}</tbody></table></div>}
       </section>
 
       {managingQuiz && (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="admin-card admin-manage-card">
+          <div className="admin-manage-header">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Manage questions</h2>
-              <p className="mt-1 text-sm text-slate-600">{managingQuiz.title} · {managedQuestions.length} questions</p>
-              <p className="mt-1 text-xs text-slate-500">Question changes are locked after the first employee submission to preserve result history.</p>
+              <h2>Manage questions</h2>
+              <p>{managingQuiz.title} · {managedQuestions.length} questions</p>
+              <p className="admin-manage-note">Question changes are locked after the first employee submission to preserve result history.</p>
             </div>
-            <button type="button" onClick={() => setManagingQuiz(null)} className="text-sm font-semibold text-slate-600 hover:text-slate-900">Close</button>
+            <button type="button" onClick={() => setManagingQuiz(null)} className="admin-close-button">Close</button>
           </div>
 
-          <ul className="mt-5 divide-y divide-slate-200">
+          <ul className="admin-question-list">
             {managedQuestions.map((question, index) => (
-              <li key={question._id} className="flex flex-wrap items-start justify-between gap-4 py-4">
+              <li key={question._id}>
                 <div>
-                  <p className="font-semibold text-slate-900">{index + 1}. {question.question}</p>
-                  <p className="mt-1 text-sm text-slate-600">Correct answer: {question.correctAnswer}</p>
+                  <p>{index + 1}. {question.question}</p>
+                  <span>Correct answer: {question.correctAnswer}</span>
                 </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => handleEditQuestion(question)} className="text-sm font-semibold text-blue-700 hover:underline">Edit</button>
-                  <button type="button" onClick={() => handleDeleteQuestion(question)} className="text-sm font-semibold text-red-700 hover:underline">Delete</button>
+                <div className="admin-inline-actions">
+                  <button type="button" onClick={() => handleEditQuestion(question)} className="admin-link-button">Edit</button>
+                  <button type="button" onClick={() => handleDeleteQuestion(question)} className="admin-link-button admin-link-button-danger">Delete</button>
                 </div>
               </li>
             ))}
           </ul>
 
-          <form onSubmit={handleSaveQuestion} className="mt-5 space-y-4 border-t border-slate-200 pt-5">
-            <h3 className="font-semibold text-slate-900">{editingQuestionId ? "Edit question" : "Add question"}</h3>
-            <label className="block text-sm font-semibold text-slate-700">Question<input required maxLength={500} value={questionEditor.question} onChange={(event) => setQuestionEditor({ ...questionEditor, question: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /></label>
-            <div className="grid gap-3 md:grid-cols-2">
+          <form onSubmit={handleSaveQuestion} className="admin-manage-form">
+            <h3>{editingQuestionId ? "Edit question" : "Add question"}</h3>
+            <label className="admin-form-field admin-form-field-full">
+              <span>Question</span>
+              <input required maxLength={500} value={questionEditor.question} onChange={(event) => setQuestionEditor({ ...questionEditor, question: event.target.value })} />
+            </label>
+            <div className="admin-answer-grid">
               {questionEditor.options.map((option, index) => (
-                <label key={index} className="text-sm font-semibold text-slate-700">Option {index + 1}<span className="mt-1 flex gap-2"><input required maxLength={250} value={option} onChange={(event) => setQuestionEditor({ ...questionEditor, options: questionEditor.options.map((current, optionIndex) => optionIndex === index ? event.target.value : current) })} className="w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /><input type="radio" name="correctAnswer" checked={questionEditor.correctAnswer === option && Boolean(option)} onChange={() => setQuestionEditor({ ...questionEditor, correctAnswer: option })} aria-label={`Mark option ${index + 1} correct`} /></span></label>
+                <label key={index} className="admin-form-field">
+                  <span>Option {index + 1}</span>
+                  <span className="admin-radio-row">
+                    <input required maxLength={250} value={option} onChange={(event) => setQuestionEditor({ ...questionEditor, options: questionEditor.options.map((current, optionIndex) => optionIndex === index ? event.target.value : current) })} />
+                    <input type="radio" name="correctAnswer" checked={questionEditor.correctAnswer === option && Boolean(option)} onChange={() => setQuestionEditor({ ...questionEditor, correctAnswer: option })} aria-label={`Mark option ${index + 1} correct`} />
+                  </span>
+                </label>
               ))}
             </div>
-            <div className="flex gap-3">
-              <button type="submit" disabled={savingQuestion} className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{savingQuestion ? "Saving..." : editingQuestionId ? "Save question" : "Add question"}</button>
-              {editingQuestionId && <button type="button" onClick={resetQuestionEditor} className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700">Cancel edit</button>}
+            <div className="admin-inline-actions admin-inline-actions-top">
+              <button type="submit" disabled={savingQuestion} className="admin-primary-button admin-save-button">{savingQuestion ? "Saving..." : editingQuestionId ? "Save question" : "Add question"}</button>
+              {editingQuestionId && <button type="button" onClick={resetQuestionEditor} className="admin-secondary-button">Cancel edit</button>}
             </div>
           </form>
         </section>

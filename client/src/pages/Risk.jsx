@@ -42,56 +42,100 @@ const Risk = () => {
   };
 
   return (
-    <section className="mx-auto max-w-3xl">
-      <header className="mb-7 border-b border-slate-200 pb-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Personal security</p>
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">My Risk</h1>
-        <p className="mt-2 text-slate-600">This score uses the current configurable prototype weighting and is not the final team formula.</p>
+    <section className="employee-dashboard-shell risk-page-shell">
+      <header className="employee-dashboard-intro risk-page-header">
+        <div>
+          <p className="section-kicker">Personal security</p>
+          <h1 className="risk-page-title">My Risk</h1>
+        </div>
       </header>
+
+      <p className="employee-dashboard-copy">
+        This score uses the current configurable prototype weighting and is not the final team formula.
+      </p>
+
       {error && <p role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      {loading ? <p className="py-8 text-slate-500">Loading risk assessment...</p> : (
+
+      {loading ? (
+        <div className="state-card">
+          <p className="dashboard-state">Loading risk assessment...</p>
+        </div>
+      ) : (
         <>
-          <section className="border-b border-slate-200 pb-6">
-            <p className="text-sm text-slate-500">Prototype human risk score</p>
-            <p className="mt-2 text-5xl font-bold text-slate-900">{assessment?.finalRiskScore == null ? "N/A" : `${assessment.finalRiskScore}%`}</p>
-            <p className="mt-2 font-semibold text-slate-700">{assessment?.riskLevel || "Awaiting activity"}</p>
-            {!assessment && <p className="mt-3 text-sm text-slate-600">There is not enough recorded quiz, training, or phishing activity to calculate a score yet.</p>}
-            <button type="button" onClick={handleCalculate} disabled={calculating} className="mt-5 rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">
+          <section className="state-card risk-overview-card">
+            <div className="risk-summary-row">
+              <div>
+                <p className="risk-score-label">Prototype human risk score</p>
+                <p className="risk-score-value">{assessment?.finalRiskScore == null ? "N/A" : `${assessment.finalRiskScore}%`}</p>
+              </div>
+              <span className="security-status-pill risk-level-pill">{assessment?.riskLevel || "Awaiting activity"}</span>
+            </div>
+
+            {!assessment && (
+              <p className="risk-note">There is not enough recorded quiz, training, or phishing activity to calculate a score yet.</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleCalculate}
+              disabled={calculating}
+              className="retry-button risk-action-button"
+            >
               {calculating ? "Calculating..." : "Recalculate assessment"}
             </button>
           </section>
+
           {assessment && (
-            <section className="mt-6 border-b border-slate-200 pb-6">
-              <h2 className="text-lg font-semibold text-slate-900">Contributing factors</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-600">Higher factor scores indicate stronger awareness. Available factors are weighted at 40% training, 35% latest quiz, and 25% phishing activity; missing factors are excluded and the remaining weights are normalized. Risk is 100 minus the resulting awareness score.</p>
-              <div className="mt-4 divide-y divide-slate-200">
+            <section className="state-card risk-page-section">
+              <h2 className="panel-title">Contributing factors</h2>
+              <p className="risk-description">
+                Higher factor scores indicate stronger awareness. Available factors are weighted at 40% training,
+                35% latest quiz, and 25% phishing activity; missing factors are excluded and the remaining weights
+                are normalized. Risk is 100 minus the resulting awareness score.
+              </p>
+
+              <div className="risk-factor-list">
                 {[
                   ["Training completion", assessment.trainingScore],
                   ["Latest quiz", assessment.quizScore],
                   ["Phishing awareness and simulation", assessment.phishingScore],
                   ["Combined security awareness", assessment.securityAwarenessScore],
                 ].map(([label, score]) => (
-                  <div key={label} className="flex items-center justify-between gap-4 py-3">
-                    <span className="text-sm text-slate-700">{label}</span>
-                    <span className="text-sm font-semibold text-slate-900">{score == null ? "No activity" : `${score}%`}</span>
+                  <div key={label} className="risk-factor-row">
+                    <span>{label}</span>
+                    <strong>{score == null ? "No activity" : `${score}%`}</strong>
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-xs leading-5 text-slate-500">Prototype scoring only. It is not a validated prediction and should be interpreted alongside the underlying activity.</p>
+
+              <p className="risk-footnote">
+                Prototype scoring only. It is not a validated prediction and should be interpreted alongside the
+                underlying activity.
+              </p>
             </section>
           )}
-          <section className="mt-6 border-b border-slate-200 pb-6">
-            <h2 className="text-lg font-semibold text-slate-900">AI risk-support prediction</h2>
+
+          <section className="state-card risk-page-section">
+            <h2 className="panel-title">AI risk-support prediction</h2>
             {prediction ? (
               <>
-                <p className="mt-2 text-slate-600">Model estimate: {prediction.predictedRisk} risk, {Math.round(prediction.confidence * 100)}% confidence.</p>
-                <p className="mt-1 text-sm text-slate-500">Model: {prediction.modelVersion}. This is decision support, not a definitive assessment.</p>
+                <p className="risk-description">
+                  Model estimate: {prediction.predictedRisk} risk, {Math.round(prediction.confidence * 100)}%
+                  confidence.
+                </p>
+                <p className="risk-footnote">Model: {prediction.modelVersion}. This is decision support, not a definitive assessment.</p>
               </>
             ) : (
-              <p className="mt-2 text-sm leading-6 text-slate-600">No validated model prediction is available. Predictions require a model trained on sufficient real employee data with independent labels; synthetic model outputs are not used.</p>
+              <p className="risk-description">
+                No validated model prediction is available. Predictions require a model trained on sufficient real
+                employee data with independent labels; synthetic model outputs are not used.
+              </p>
             )}
           </section>
-          <p className="mt-5 text-sm text-slate-600">Review your <Link to="/my/recommendations" className="font-semibold text-blue-700 underline">personal recommendations</Link> for suggested next steps.</p>
+
+          <p className="risk-footer-copy">
+            Review your <Link to="/my/recommendations" className="auth-link">personal recommendations</Link> for suggested next steps.
+          </p>
         </>
       )}
     </section>

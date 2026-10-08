@@ -26,77 +26,60 @@ const SecurityProgress = ({
     : null;
 
   return (
-    <section className="mt-10">
-      <h2 className="mb-4 text-xl font-semibold text-slate-800">
-        Security Progress
-      </h2>
+    <section className="security-progress-section mt-10">
+      <h2 className="panel-title">Progress</h2>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <h3 className="font-semibold text-slate-800">Training Progress</h3>
+      <div className="security-progress-grid">
+        <div className="progress-card">
+          <div className="progress-card-header">
+            <span>Training</span>
+            <strong>{trainingPercentage == null ? "—" : `${trainingPercentage}%`}</strong>
+          </div>
           {trainingPercentage === null ? (
-            <p className="mt-3 text-sm text-slate-500">
-              No training progress available yet.
-            </p>
+            <p className="metric-subtext">No data</p>
           ) : (
             <>
-              <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
+              <div className="progress-meta">
                 <span>
-                  {completedTrainings} / {trainingTotal} completed
+                  {completedTrainings} / {trainingTotal}
                 </span>
-                <span>{trainingPercentage}%</span>
               </div>
               <ProgressTrack percentage={trainingPercentage} />
             </>
           )}
-          <p className="mt-4 text-sm text-slate-500">
-            {pendingTrainings > 0
-              ? "Keep going - complete your remaining training."
-              : "Review your available training materials."}
-          </p>
         </div>
 
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <h3 className="font-semibold text-slate-800">Quiz Progress</h3>
-          <p className="mt-3 text-2xl font-bold text-amber-600">
-            {typeof quizzesCompleted === "number"
-              ? `${quizzesCompleted} completed`
-              : "Not available yet"}
+        <div className="progress-card">
+          <div className="progress-card-header">
+            <span>Quiz</span>
+            <strong>
+              {typeof quizzesCompleted === "number" ? `${quizzesCompleted}` : "—"}
+            </strong>
+          </div>
+          <p className="metric-subtext">
+            {typeof quizzesCompleted === "number" ? "Completed" : "No result"}
           </p>
-          <p className="mt-2 text-sm text-slate-500">
-            A total quiz count or latest score is not available yet.
-          </p>
-          <Link
-            to="/quiz"
-            className="mt-4 inline-block font-semibold text-blue-600 hover:text-blue-700"
-          >
-            Test your security awareness
+          <Link to="/quiz" className="inline-link">
+            Open
           </Link>
         </div>
 
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <h3 className="font-semibold text-slate-800">
-            Phishing Awareness Progress
-          </h3>
+        <div className="progress-card">
+          <div className="progress-card-header">
+            <span>Phishing</span>
+            <strong>
+              {phishingAwareness ? `${phishingAwareness.score}%` : "—"}
+            </strong>
+          </div>
           {phishingAwareness ? (
-            <>
-              <p className="mt-3 text-2xl font-bold text-orange-600">
-                {phishingAwareness.score}%
-              </p>
-              <p className="mt-2 text-sm text-slate-500">
-                {phishingAwareness.correctAnswers} / {phishingAwareness.totalScenarios} correct
-              </p>
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-slate-500">
-              Not completed. Complete the phishing awareness challenge to see your score.
+            <p className="metric-subtext">
+              {phishingAwareness.correctAnswers} / {phishingAwareness.totalScenarios} correct
             </p>
+          ) : (
+            <p className="metric-subtext">Not started</p>
           )}
-          <Link
-            to="/phishing"
-            className="mt-4 inline-block font-semibold text-amber-600 hover:text-amber-700"
-          >
-            Review phishing awareness
+          <Link to="/phishing" className="inline-link">
+            View
           </Link>
         </div>
       </div>

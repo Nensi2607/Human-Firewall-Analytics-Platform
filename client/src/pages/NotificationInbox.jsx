@@ -68,22 +68,17 @@ const NotificationInbox = () => {
   };
 
   return (
-    <section className="mx-auto max-w-4xl">
-      <header className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-            Updates
-          </p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">Notifications</h1>
-          <p className="mt-2 text-slate-600">
-            {unreadCount === 0 ? "You're all caught up." : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`}
-          </p>
+    <section className="employee-dashboard-shell notifications-page-shell">
+      <header className="employee-dashboard-intro notifications-page-header">
+        <div className="notifications-header-left">
+          <p className="section-kicker">Updates</p>
         </div>
+
         {unreadCount > 0 && (
           <button
             type="button"
             onClick={handleMarkAllRead}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="notifications-mark-all-button"
           >
             <CheckCheck size={16} /> Mark all as read
           </button>
@@ -97,25 +92,29 @@ const NotificationInbox = () => {
       )}
 
       {loading ? (
-        <p className="py-8 text-slate-500">Loading notifications...</p>
+        <div className="state-card">
+          <p className="dashboard-state">Loading notifications...</p>
+        </div>
       ) : notifications.length === 0 ? (
-        <p className="py-8 text-slate-500">No notifications yet.</p>
+        <div className="state-card">
+          <p className="dashboard-state">No notifications yet.</p>
+        </div>
       ) : (
-        <ul className="divide-y divide-slate-200">
+        <ul className="notifications-list">
           {notifications.map((notification) => (
             <li
               key={notification._id}
-              className={`flex items-start justify-between gap-5 py-5 ${notification.isRead ? "" : "bg-blue-50/50 px-4"}`}
+              className={`notification-item ${notification.isRead ? "" : "notification-item-unread"}`}
             >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold text-slate-900">{notification.title}</h2>
+              <div className="notification-copy">
+                <div className="notification-header-row">
+                  <h2>{notification.title}</h2>
                   {!notification.isRead && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">New</span>
+                    <span className="notification-badge">New</span>
                   )}
                 </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{notification.message}</p>
-                <time className="mt-2 block text-xs text-slate-500" dateTime={notification.createdAt}>
+                <p className="notification-message">{notification.message}</p>
+                <time className="notification-time" dateTime={notification.createdAt}>
                   {dateFormatter.format(new Date(notification.createdAt))}
                 </time>
               </div>
@@ -126,7 +125,7 @@ const NotificationInbox = () => {
                   aria-label={`Mark ${notification.title} as read`}
                   disabled={updatingId === notification._id}
                   onClick={() => handleMarkRead(notification._id)}
-                  className="shrink-0 rounded-md p-2 text-slate-500 hover:bg-white hover:text-blue-700 disabled:opacity-50"
+                  className="notification-read-button"
                 >
                   <Check size={18} />
                 </button>

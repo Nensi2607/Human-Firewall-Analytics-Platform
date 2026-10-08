@@ -37,15 +37,14 @@ const AdminDashboard = () => {
   }, [retryCount]);
 
   return (
-    <div className="admin-overview-page">
-      <section className="hero-panel">
+    <div className="employee-dashboard-shell admin-overview-page">
+      <section className="employee-dashboard-intro">
         <div>
-          <p className="hero-kicker">Overview</p>
+          <p className="section-kicker">Overview</p>
           <h1>Security posture</h1>
-          <p className="hero-subtitle">Welcome back, Admin</p>
         </div>
 
-        <div className="hero-status">
+        <div className="security-status-pill">
           <span className="status-indicator"></span>
           Database snapshot
         </div>

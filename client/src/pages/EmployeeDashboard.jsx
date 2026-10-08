@@ -9,7 +9,7 @@ const OverviewCard = ({ title, value, detail, accent }) => (
   <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
     <div className={`mb-4 h-1 w-12 rounded-full ${accent}`} />
     <h3 className="text-sm font-semibold text-slate-500">{title}</h3>
-    <p className="mt-2 text-2xl font-bold text-slate-800">{value}</p>
+    <p className="mt-2 text-2xl font-medium text-slate-800">{value}</p>
     <p className="mt-2 text-sm text-slate-500">{detail}</p>
   </article>
 );
@@ -82,7 +82,7 @@ const EmployeeDashboard = () => {
     <div className="employee-dashboard-shell">
       <section className="employee-dashboard-intro">
         <div>
-          <p className="section-kicker">Security Awareness Dashboard</p>
+          <p className="section-kicker">HFAP</p>
           <h1>
             Welcome{dashboard?.employee?.firstName
               ? `, ${dashboard.employee.firstName}`
@@ -91,14 +91,9 @@ const EmployeeDashboard = () => {
         </div>
         <div className="security-status-pill">
           <span className="status-indicator"></span>
-          Security readiness
+          Ready
         </div>
       </section>
-
-      <p className="employee-dashboard-copy">
-        Build strong security habits by completing your training, quizzes, and
-        phishing awareness activities.
-      </p>
 
       {loading ? (
         <h3 className="dashboard-state">Loading your security dashboard...</h3>
@@ -114,7 +109,7 @@ const EmployeeDashboard = () => {
       ) : (
         <>
           <section>
-            <h2 className="panel-title">Security Overview</h2>
+            <h2 className="panel-title">Overview</h2>
             <div className="employee-metrics-grid">
               <OverviewCard
                 title="Risk Score"
@@ -185,19 +180,19 @@ const EmployeeDashboard = () => {
           />
 
           <section className="mt-10">
-            <h2 className="panel-title">Security Awareness Actions</h2>
+            <h2 className="panel-title">Quick actions</h2>
             <div className="action-grid">
               <Link to="/quiz" className="action-card action-card-primary">
-                <span>Take Security Quiz</span>
-                <small>Test your security awareness.</small>
+                <span>Quiz</span>
+                <small>Assessment</small>
               </Link>
               <Link to="/training" className="action-card action-card-success">
-                <span>Continue Training</span>
-                <small>Keep your learning progress moving.</small>
+                <span>Training</span>
+                <small>Continue</small>
               </Link>
               <Link to="/phishing" className="action-card action-card-warning">
-                <span>Phishing Awareness</span>
-                <small>Review phishing awareness activity.</small>
+                <span>Phishing</span>
+                <small>Review</small>
               </Link>
             </div>
           </section>

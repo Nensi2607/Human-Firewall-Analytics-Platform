@@ -11,18 +11,18 @@ const getStoredUser = () => {
 };
 
 const ProgressMetric = ({ title, completed, total, percentage, detail }) => (
-  <section className="border-b border-slate-200 py-6 last:border-b-0">
-    <div className="flex flex-wrap items-end justify-between gap-3">
+  <section className="progress-metric-panel">
+    <div className="progress-metric-header">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        <p className="mt-1 text-sm text-slate-600">{detail}</p>
+        <h2>{title}</h2>
+        <p>{detail}</p>
       </div>
-      <p className="text-sm font-semibold text-slate-700">
+      <p className="progress-metric-summary">
         {completed} of {total} completed
       </p>
     </div>
     <div
-      className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"
+      className="progress-metric-track"
       role="progressbar"
       aria-label={title}
       aria-valuemin="0"
@@ -30,11 +30,11 @@ const ProgressMetric = ({ title, completed, total, percentage, detail }) => (
       aria-valuenow={percentage ?? 0}
     >
       <div
-        className="h-full rounded-full bg-emerald-600 transition-[width]"
+        className="progress-metric-fill"
         style={{ width: `${percentage ?? 0}%` }}
       />
     </div>
-    <p className="mt-2 text-right text-sm font-semibold text-emerald-700">
+    <p className="progress-metric-value">
       {percentage === null ? "No activities" : `${percentage}%`}
     </p>
   </section>
@@ -108,25 +108,19 @@ const EmployeeProgress = () => {
     : "";
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <header className="mb-7 border-b border-slate-200 pb-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-          Learning activity
-        </p>
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">
-          {isAdmin ? "Employee Progress" : "My Progress"}
-        </h1>
-        <p className="mt-2 text-slate-600">
+    <div className="employee-progress-shell">
+      <header className="employee-progress-header">
+        <p className="section-kicker">Learning activity</p>
+        <p className="employee-progress-subhead">
           Training and quiz completion from recorded activity.
         </p>
         {isAdmin && (
-          <label className="mt-5 block max-w-md">
-            <span className="text-sm font-semibold text-slate-700">Employee</span>
+          <label className="employee-progress-select-wrap">
+            <span>Employee</span>
             <select
               value={selectedEmployeeId}
               onChange={(event) => setSelectedEmployeeId(event.target.value)}
               disabled={directoryLoading || employees.length === 0}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
             >
               {employees.length === 0 ? (
                 <option value="">No employees available</option>
@@ -141,30 +135,28 @@ const EmployeeProgress = () => {
       </header>
 
       {error && (
-        <p role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="employee-progress-alert">
           {error}
         </p>
       )}
 
       {loading || directoryLoading ? (
-        <p className="py-8 text-slate-500">Loading progress...</p>
+        <p className="employee-progress-loading">Loading progress...</p>
       ) : progress ? (
         <>
-          <section className="mb-5 border-b border-slate-200 pb-6">
-            <p className="text-sm text-slate-500">Progress for</p>
-            <h2 className="mt-1 text-xl font-semibold text-slate-900">{employeeName}</h2>
+          <section className="employee-progress-summary">
+            <p className="employee-progress-summary-label">Progress for</p>
+            <h2>{employeeName}</h2>
           </section>
 
-          <section className="mb-7 border-b border-slate-200 pb-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Overall engagement
-            </p>
-            <p className="mt-2 text-4xl font-bold text-slate-900">
+          <section className="employee-progress-overview">
+            <p className="employee-progress-overview-label">Overall engagement</p>
+            <p className="employee-progress-overview-value">
               {progress.overallEngagementPercentage === null
                 ? "N/A"
                 : `${progress.overallEngagementPercentage}%`}
             </p>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="employee-progress-overview-copy">
               Combined completion across available training and assigned quizzes.
             </p>
           </section>
@@ -185,7 +177,7 @@ const EmployeeProgress = () => {
           />
         </>
       ) : !error && !directoryLoading && isAdmin ? (
-        <p className="py-8 text-slate-500">Select an employee to view progress.</p>
+        <p className="employee-progress-loading">Select an employee to view progress.</p>
       ) : null}
     </div>
   );

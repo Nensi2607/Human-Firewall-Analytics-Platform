@@ -168,14 +168,10 @@ function Quiz() {
   // Loading
   if (loading) {
     return (
-      <div
-        style={{
-          textAlign: "center",
-          marginTop: "100px",
-          fontSize: "24px",
-        }}
-      >
-        ⏳ Loading Quiz...
+      <div className="quiz-status-shell">
+        <div className="quiz-status-card">
+          <p className="quiz-status-text">⏳ Loading Quiz...</p>
+        </div>
       </div>
     );
   }
@@ -183,57 +179,43 @@ function Quiz() {
   // Error
   if (error) {
     return (
-      <div
-        style={{
-          maxWidth: "700px",
-          margin: "80px auto",
-          padding: "30px",
-          background: "white",
-          borderRadius: "15px",
-          textAlign: "center",
-          boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h2 style={{ color: "#DC2626" }}>
-          ❌ Unable to Load Quiz
-        </h2>
-
-        <p
-          style={{
-            marginTop: "15px",
-            color: "#555",
-          }}
-        >
-          {error}
-        </p>
-
-        <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="mt-5 rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white">
-          Try again
-        </button>
+      <div className="quiz-status-shell">
+        <div className="quiz-status-card quiz-error-card">
+          <h2>❌ Unable to Load Quiz</h2>
+          <p>{error}</p>
+          <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="quiz-primary-button">
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!quizId) {
     return (
-      <section className="mx-auto max-w-4xl">
-        <header className="mb-6 border-b border-slate-200 pb-5">
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Security learning</p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">Assigned quizzes</h1>
-          <p className="mt-2 text-slate-600">Choose a quiz to review and complete.</p>
+      <section className="quiz-page-shell">
+        <header className="quiz-header">
+          <p className="section-kicker">Security learning</p>
+          <h1>Assigned quizzes</h1>
+          <p className="quiz-page-copy">Choose a quiz to review and complete.</p>
         </header>
+
         {availableQuizzes.length === 0 ? (
-          <p className="py-8 text-slate-500">No assigned quizzes are available yet.</p>
+          <div className="quiz-empty-state">No assigned quizzes are available yet.</div>
         ) : (
-          <ul className="divide-y divide-slate-200">
+          <ul className="quiz-list">
             {availableQuizzes.map((quiz) => (
-              <li key={quiz._id} className="flex flex-wrap items-center justify-between gap-4 py-5">
-                <div>
-                  <h2 className="font-semibold text-slate-900">{quiz.title}</h2>
-                  <p className="mt-1 text-sm text-slate-600">{quiz.description || "Security awareness assessment"}</p>
-                  <p className="mt-1 text-xs capitalize text-slate-500">{[quiz.category, quiz.difficulty, quiz.duration ? `${quiz.duration} min` : ""].filter(Boolean).join(" · ")}</p>
+              <li key={quiz._id} className="quiz-list-item">
+                <div className="quiz-list-content">
+                  <h2>{quiz.title}</h2>
+                  <p>{quiz.description || "Security awareness assessment"}</p>
+                  <span>
+                    {[quiz.category, quiz.difficulty, quiz.duration ? `${quiz.duration} min` : ""].filter(Boolean).join(" · ")}
+                  </span>
                 </div>
-                <button type="button" onClick={() => navigate(`/quiz/${quiz._id}`)} className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800">Start quiz</button>
+                <button type="button" onClick={() => navigate(`/quiz/${quiz._id}`)} className="quiz-primary-button">
+                  Start quiz
+                </button>
               </li>
             ))}
           </ul>
@@ -245,14 +227,10 @@ function Quiz() {
   // No questions
   if (questions.length === 0) {
     return (
-      <div
-        style={{
-          textAlign: "center",
-          marginTop: "100px",
-          fontSize: "22px",
-        }}
-      >
-        No quiz questions found.
+      <div className="quiz-status-shell">
+        <div className="quiz-status-card">
+          <p className="quiz-status-text">No quiz questions found.</p>
+        </div>
       </div>
     );
   }
@@ -284,77 +262,45 @@ function Quiz() {
         : "Some areas need improvement. Review the training material and try again.";
 
     return (
-      <div
-        style={{
-          maxWidth: "700px",
-          margin: "50px auto",
-          background: "white",
-          padding: "40px",
-          borderRadius: "15px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-          textAlign: "center",
-        }}
-      >
-        <h1>🎉 Quiz Completed</h1>
+      <div className="quiz-page-shell">
+        <div className="quiz-result-card">
+          <p className="section-kicker">Assessment complete</p>
+          <h1>Quiz completed</h1>
 
-        <h2 style={{ marginTop: "25px" }}>
-          Score: {score} / {questions.length}
-        </h2>
-
-        <h2>{percentage}%</h2>
-
-        <h2 style={{ color: performanceColor }}>
-          {performance}
-        </h2>
-
-        <p style={{ marginTop: "15px", color: "#555" }}>
-          {securityMessage}
-        </p>
-
-        <p>✅ Correct Answers: {score}</p>
-
-        <p>
-          ❌ Wrong Answers: {questions.length - score}
-        </p>
-
-        {submissionError ? (
-          <div style={{ marginTop: "20px", color: "#DC2626" }}>
-            <p>{submissionError}</p>
-            <button
-              onClick={() => setSubmissionAttempt((attempt) => attempt + 1)}
-              style={{
-                marginTop: "12px",
-                padding: "10px 20px",
-                background: "#2563EB",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-              }}
-            >
-              Try Again
-            </button>
+          <div className="quiz-result-summary">
+            <div>
+              <span>Score</span>
+              <strong>{score} / {questions.length}</strong>
+            </div>
+            <div>
+              <span>Percentage</span>
+              <strong>{percentage}%</strong>
+            </div>
           </div>
-        ) : !submittedResult ? (
-          <p style={{ marginTop: "20px", color: "#6B7280" }}>
-            Saving your result...
-          </p>
-        ) : null}
 
-        <button
-          onClick={restartQuiz}
-          style={{
-            marginTop: "25px",
-            padding: "12px 25px",
-            background: "#2563EB",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
-        >
-          Restart Quiz
-        </button>
+          <h2 style={{ color: performanceColor }}>{performance}</h2>
+          <p className="quiz-result-message">{securityMessage}</p>
+
+          <div className="quiz-result-meta">
+            <p>✅ Correct Answers: {score}</p>
+            <p>❌ Wrong Answers: {questions.length - score}</p>
+          </div>
+
+          {submissionError ? (
+            <div className="quiz-result-error">
+              <p>{submissionError}</p>
+              <button type="button" className="quiz-primary-button" onClick={() => setSubmissionAttempt((attempt) => attempt + 1)}>
+                Try again
+              </button>
+            </div>
+          ) : !submittedResult ? (
+            <p className="quiz-saving-text">Saving your result...</p>
+          ) : null}
+
+          <button type="button" className="quiz-primary-button quiz-restart-button" onClick={restartQuiz}>
+            Restart Quiz
+          </button>
+        </div>
       </div>
     );
   }
@@ -365,132 +311,52 @@ function Quiz() {
     ((current + 1) / questions.length) * 100;
 
   return (
-    <div
-      style={{
-        maxWidth: "850px",
-        margin: "40px auto",
-      }}
-    >
-      <div
-        style={{
-          background: "white",
-          borderRadius: "15px",
-          padding: "35px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h1>🛡 Cyber Security Awareness Quiz</h1>
+    <div className="quiz-page-shell">
+      <div className="quiz-question-card">
+        <header className="quiz-header small-header">
+          <p className="section-kicker">Security quiz</p>
+          <h1>Cyber Security Awareness Quiz</h1>
+        </header>
 
-        {/* Progress */}
-        <div
-          style={{
-            marginTop: "25px",
-            height: "10px",
-            background: "#E5E7EB",
-            borderRadius: "10px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: `${progress}%`,
-              height: "100%",
-              background: "#2563EB",
-              borderRadius: "10px",
-            }}
-          />
+        <div className="quiz-progress-wrap">
+          <div className="quiz-progress-track">
+            <div className="quiz-progress-bar" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="quiz-progress-label">Question {current + 1} of {questions.length}</p>
         </div>
 
-        <p
-          style={{
-            marginTop: "15px",
-            color: "#666",
-          }}
-        >
-          Question {current + 1} of {questions.length}
-        </p>
+        <h2 className="quiz-question-title">{question.question}</h2>
 
-        {/* Question */}
-        <h2 style={{ marginTop: "25px" }}>
-          {question.question}
-        </h2>
-
-        {/* Options */}
-        <div style={{ marginTop: "25px" }}>
+        <div className="quiz-options">
           {question.options.map((option, index) => (
             <button
               key={index}
+              type="button"
               onClick={() => selectAnswer(option)}
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                padding: "16px",
-                marginBottom: "15px",
-                borderRadius: "10px",
-                border:
-                  answers[current] === option
-                    ? "2px solid #2563EB"
-                    : "1px solid #D1D5DB",
-                background:
-                  answers[current] === option
-                    ? "#DBEAFE"
-                    : "white",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
+              className={`quiz-option-button ${answers[current] === option ? "selected" : ""}`}
             >
               {option}
             </button>
           ))}
         </div>
 
-        {/* Navigation */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-          }}
-        >
+        <div className="quiz-navigation">
           <button
+            type="button"
             onClick={previousQuestion}
             disabled={current === 0}
-            style={{
-              padding: "12px 25px",
-              background:
-                current === 0 ? "#D1D5DB" : "#6B7280",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor:
-                current === 0
-                  ? "not-allowed"
-                  : "pointer",
-            }}
+            className={`quiz-nav-button quiz-nav-secondary ${current === 0 ? "disabled" : ""}`}
           >
             ◀ Previous
           </button>
 
           <button
+            type="button"
             onClick={nextQuestion}
             disabled={!answers[current]}
-            style={{
-              padding: "12px 30px",
-              background: !answers[current]
-                ? "#D1D5DB"
-                : "#2563EB",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: !answers[current]
-                ? "not-allowed"
-                : "pointer",
-            }}
+            className={`quiz-nav-button quiz-nav-primary ${!answers[current] ? "disabled" : ""}`}
           >
-            {current === questions.length - 1
-              ? "Submit Quiz"
-              : "Next ▶"}
+            {current === questions.length - 1 ? "Submit Quiz" : "Next ▶"}
           </button>
         </div>
       </div>

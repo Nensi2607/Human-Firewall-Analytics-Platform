@@ -54,21 +54,21 @@ const Reports = () => {
   }, []);
 
   return (
-    <section className="mx-auto max-w-4xl">
-      <header className="mb-7 border-b border-slate-200 pb-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Reporting</p>
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">Organization Reports</h1>
-        <p className="mt-2 text-slate-600">Generate a report from the current analytics, AI prediction, and recommendation data.</p>
+    <section className="reports-page-shell">
+      <header className="reports-page-header">
+        <p className="section-kicker">Reporting</p>
+        <h1 className="reports-page-title">Organization Reports</h1>
+        <p className="reports-page-copy">Generate a report from the current analytics, AI prediction, and recommendation data.</p>
       </header>
-      {loading && <p className="py-8 text-slate-500">Preparing report data...</p>}
-      {error && <p role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {loading && <p className="reports-loading">Preparing report data...</p>}
+      {error && <p role="alert" className="admin-alert admin-alert-error">{error}</p>}
       {!loading && !error && reportData && (
-        <div className="border-b border-slate-200 pb-6">
-          <p className="text-sm text-slate-600">{reportData.employees.length} employee records, {reportData.recommendations.length} recommendations, and current model results are ready.</p>
+        <div className="report-summary-card">
+          <p className="report-summary-text">{reportData.employees.length} employee records, {reportData.recommendations.length} recommendations, and current model results are ready.</p>
           <button
             type="button"
             onClick={() => downloadAnalyticsReport(reportData)}
-            className="mt-5 rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+            className="report-download-button"
           >
             Download PDF and Excel reports
           </button>

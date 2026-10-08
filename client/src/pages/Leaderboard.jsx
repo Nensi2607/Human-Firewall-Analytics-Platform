@@ -42,21 +42,19 @@ const Leaderboard = () => {
   }, [departmentId]);
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <header className="mb-7 flex flex-wrap items-end justify-between gap-5 border-b border-slate-200 pb-5">
+    <div className="admin-quiz-page leaderboard-page">
+      <header className="admin-page-header leaderboard-header">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-            Security learning
-          </p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">Leaderboard</h1>
-          <p className="mt-2 text-slate-600">Ranked by quiz results and completed training.</p>
+          <p className="section-kicker">Security learning</p>
+          <h1 className="leaderboard-title">Leaderboard</h1>
+          <p className="admin-page-subtitle leaderboard-subtitle">Ranked by quiz results and completed training.</p>
         </div>
-        <label className="w-full max-w-xs">
-          <span className="text-sm font-semibold text-slate-700">View</span>
+        <label className="leaderboard-filter">
+          <span>View</span>
           <select
             value={departmentId}
             onChange={(event) => setDepartmentId(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+            className="leaderboard-select"
           >
             <option value="">Company-wide</option>
             {departments.map((department) => (
@@ -68,54 +66,50 @@ const Leaderboard = () => {
         </label>
       </header>
 
-      <section className="mb-6 border-l-4 border-amber-400 bg-amber-50 px-4 py-3">
-        <h2 className="text-sm font-bold text-amber-950">Prototype learning score</h2>
-        <p className="mt-1 text-sm text-amber-900">
+      <section className="leaderboard-summary admin-card">
+        <h2>Prototype learning score</h2>
+        <p>
           This score averages quiz results and training completion. It ranks learning activity only and is not a human risk score.
         </p>
       </section>
 
-      {error && (
-        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <p role="alert" className="admin-alert admin-alert-error">{error}</p>}
 
-      <section aria-label={`${scope} leaderboard`}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">{scope}</h2>
-          {!loading && <p className="text-sm text-slate-500">{rows.length} employees</p>}
+      <section className="admin-card leaderboard-table-card" aria-label={`${scope} leaderboard`}>
+        <div className="admin-section-header leaderboard-table-header">
+          <h2>{scope}</h2>
+          {!loading && <p>{rows.length} employees</p>}
         </div>
         {loading ? (
-          <p className="py-8 text-slate-500">Loading leaderboard...</p>
+          <p className="empty-state">Loading leaderboard...</p>
         ) : rows.length === 0 ? (
-          <p className="py-8 text-slate-500">No active employees in this view.</p>
+          <p className="empty-state">No active employees in this view.</p>
         ) : (
-          <div className="overflow-x-auto border-y border-slate-200">
-            <table className="w-full min-w-[720px] border-collapse text-left">
+          <div className="admin-table-wrap leaderboard-table-wrap">
+            <table className="admin-quiz-table leaderboard-table">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                  <th scope="col" className="px-3 py-3">Rank</th>
-                  <th scope="col" className="px-3 py-3">Employee</th>
-                  <th scope="col" className="px-3 py-3">Department</th>
-                  <th scope="col" className="px-3 py-3 text-right">Quiz average</th>
-                  <th scope="col" className="px-3 py-3 text-right">Training</th>
-                  <th scope="col" className="px-3 py-3 text-right">Learning score</th>
+                <tr>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Employee</th>
+                  <th scope="col">Department</th>
+                  <th scope="col" className="leaderboard-numeric">Quiz average</th>
+                  <th scope="col" className="leaderboard-numeric">Training</th>
+                  <th scope="col" className="leaderboard-numeric">Learning score</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.userId} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                    <td className="px-3 py-4 font-semibold text-slate-600">{row.rank}</td>
-                    <th scope="row" className="px-3 py-4 font-semibold text-slate-900">{row.name}</th>
-                    <td className="px-3 py-4 text-slate-600">{row.department}</td>
-                    <td className="px-3 py-4 text-right tabular-nums text-slate-700">
+                  <tr key={row.userId}>
+                    <td className="leaderboard-rank">{row.rank}</td>
+                    <th scope="row" className="admin-quiz-title-cell leaderboard-name">{row.name}</th>
+                    <td>{row.department}</td>
+                    <td className="leaderboard-numeric leaderboard-metric">
                       {formatPercentage(row.averageQuizPercentage)}
                     </td>
-                    <td className="px-3 py-4 text-right tabular-nums text-slate-700">
+                    <td className="leaderboard-numeric leaderboard-metric">
                       {row.completedTrainings}/{row.totalTrainings} · {formatPercentage(row.trainingCompletionPercentage)}
                     </td>
-                    <td className="px-3 py-4 text-right font-bold tabular-nums text-slate-900">
+                    <td className="leaderboard-numeric leaderboard-score">
                       {formatPercentage(row.leaderboardScore)}
                     </td>
                   </tr>
