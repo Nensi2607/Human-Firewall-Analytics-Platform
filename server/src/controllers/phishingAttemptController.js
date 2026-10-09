@@ -14,7 +14,7 @@ const refreshEmployeeRisk = async (userId) => {
 exports.getMyPhishingAttempts = async (req, res, next) => {
 	try {
 		const attempts = await PhishingAttempt.find({ userId: req.user._id })
-			.select("campaignId sentAt expiresAt clicked clickedAt linkClicked linkClickedAt reported reportedAt")
+			.select("campaignId sentAt expiresAt clicked clickedAt linkClicked linkClickedAt emailOpened emailOpenedAt reported reportedAt")
 			.populate("campaignId", "title status launchDate")
 			.sort({ sentAt: -1 })
 			.lean();

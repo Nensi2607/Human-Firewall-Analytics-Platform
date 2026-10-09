@@ -2,6 +2,9 @@ const express = require("express");
 
 const {
   getCurrentUserProfile,
+  updateMyProfile,
+  changeMyPassword,
+  getMyAdminSummary,
   getUsers,
   getUser,
   getEmployeeDetail,
@@ -14,6 +17,9 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.get("/me", protect, getCurrentUserProfile);
+router.patch("/me", protect, updateMyProfile);
+router.patch("/me/password", protect, changeMyPassword);
+router.get("/me/admin-summary", protect, authorize("admin"), getMyAdminSummary);
 
 // Shared list for authenticated users; mutations remain admin-only.
 router.get("/", protect, authorize("admin"), getUsers);

@@ -26,6 +26,11 @@ const quizResultSchema = new mongoose.Schema({
 
   percentage: Number,
 
+  submittedLate: {
+    type: Boolean,
+    default: false,
+  },
+
   timeTaken: Number,
 
   submittedAt: {

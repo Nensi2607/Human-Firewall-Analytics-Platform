@@ -3,9 +3,11 @@ const Training = require("../models/Training");
 const TrainingProgress = require("../models/TrainingProgress");
 const User = require("../models/User");
 const { createNotificationsForUsers } = require("../services/notificationService");
+const { calculateTrainingProgress } = require("../services/trainingProgressService");
+const { KNOWLEDGE_CHECK_PASS_PERCENT } = require("../config/trainingConfig");
 
 const getTrainingInput = (body, requireTitle = false) => {
-	const allowedFields = ["title", "description", "category", "type", "resourceURL", "duration"];
+	const allowedFields = ["title", "description", "category", "type", "resourceURL", "duration", "difficulty", "estimatedMinutes"];
 	if (
 		!body ||
 		typeof body !== "object" ||
@@ -48,21 +50,78 @@ const getTrainingInput = (body, requireTitle = false) => {
 		if (!Number.isInteger(body.duration) || body.duration < 1 || body.duration > 1440) return null;
 		input.duration = body.duration;
 	}
+	if (body.difficulty !== undefined) {
+		if (!["Beginner", "Intermediate", "Advanced"].includes(body.difficulty)) return null;
+		input.difficulty = body.difficulty;
+	}
+	if (body.estimatedMinutes !== undefined) {
+		if (!Number.isInteger(body.estimatedMinutes) || body.estimatedMinutes < 1 || body.estimatedMinutes > 1440) return null;
+		input.estimatedMinutes = body.estimatedMinutes;
+	}
 	return Object.keys(input).length ? input : null;
 };
 
 exports.getTrainings = async (req, res, next) => {
 	try {
 		const trainings = await Training.find()
-			.select("_id title description category type resourceURL duration")
-			.sort({ createdAt: 1 });
+			.select("_id title description category type resourceURL duration difficulty estimatedMinutes lessons knowledgeCheck.questions.question knowledgeCheck.questions.options createdAt")
+			.sort({ createdAt: 1 })
+			.lean();
+		let data = trainings.map((training) => ({
+			...training,
+			knowledgeCheckPassPercent: KNOWLEDGE_CHECK_PASS_PERCENT,
+		}));
+		if (req.user.role === "admin" && trainings.length) {
+			const [employeeCount, records] = await Promise.all([
+				User.countDocuments({ role: "employee" }),
+				TrainingProgress.find({ trainingId: { $in: trainings.map((training) => training._id) } })
+					.select("userId trainingId progress completed completedAt openedLessons completedLessons knowledgeCheckAttempts knowledgeCheckScore knowledgeCheckPassed knowledgeCheckCompletedAt lastActivityAt legacyProgressValue legacyCompletedValue legacyCompletedAt legacyCapturedAt")
+					.lean(),
+			]);
+			const recordsByTraining = new Map();
+			records.forEach((record) => {
+				const id = String(record.trainingId);
+				recordsByTraining.set(id, [...(recordsByTraining.get(id) || []), record]);
+			});
+			data = data.map((training) => {
+				const trainingRecords = recordsByTraining.get(String(training._id)) || [];
+				const progressStates = trainingRecords.map((record) => calculateTrainingProgress(record, training));
+				const completed = progressStates.filter((record) => record.completed).length;
+				const started = progressStates.filter((record) =>
+					record.openedLessons.length > 0 || record.completedLessons.length > 0 || record.knowledgeCheckAttempts > 0 || record.legacyCompletion || record.legacyProgress || record.progress > 0
+				).length;
+				return {
+					...training,
+					progressSummary: {
+						notStarted: Math.max(0, employeeCount - started),
+						inProgress: Math.max(0, started - completed),
+						completed,
+					},
+				};
+			});
+		}
 
 		res.status(200).json({
 			success: true,
-			data: trainings,
+			data,
 		});
 	} catch (err) {
 		next(err);
+	}
+};
+
+exports.getKnowledgeCheck = async (req, res, next) => {
+	try {
+		if (!mongoose.Types.ObjectId.isValid(req.params.trainingId)) {
+			return res.status(400).json({ success: false, message: "Invalid training ID." });
+		}
+		const training = await Training.findById(req.params.trainingId)
+			.select("knowledgeCheck.questions.question knowledgeCheck.questions.options")
+			.lean();
+		if (!training) return res.status(404).json({ success: false, message: "Training not found." });
+		return res.status(200).json({ success: true, data: training.knowledgeCheck?.questions || [] });
+	} catch (error) {
+		return next(error);
 	}
 };
 

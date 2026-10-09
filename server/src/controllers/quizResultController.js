@@ -6,7 +6,7 @@ const { findAccessibleQuiz } = require("../services/quizAccessService");
 exports.getMyQuizResults = async (req, res, next) => {
 	try {
 		const results = await QuizResult.find({ userId: req.user._id })
-			.select("quizId score totalQuestions correctAnswers percentage submittedAt completedAt")
+			.select("quizId score totalQuestions correctAnswers percentage submittedLate submittedAt completedAt")
 			.populate("quizId", "title category difficulty")
 			.sort({ submittedAt: -1 })
 			.lean();
@@ -66,6 +66,7 @@ exports.submitQuizResult = async (req, res, next) => {
 		const percentage = Math.round(
 			(correctAnswers / totalQuestions) * 100
 		);
+		const submittedAt = new Date();
 
 		const result = await QuizResult.create({
 			userId: req.user._id,
@@ -74,6 +75,8 @@ exports.submitQuizResult = async (req, res, next) => {
 			totalQuestions,
 			correctAnswers,
 			percentage,
+			submittedAt,
+			submittedLate: Boolean(quiz.dueDate && submittedAt > new Date(quiz.dueDate)),
 		});
 
 		res.status(201).json({

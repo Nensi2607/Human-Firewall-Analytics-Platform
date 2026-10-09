@@ -13,6 +13,7 @@ import {
   Target,
   TrendingUp,
   Trophy,
+  UserRound,
   Users,
 } from "lucide-react";
 
@@ -21,6 +22,11 @@ const adminMenuItems = [
     name: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    name: "My Profile",
+    path: "/profile",
+    icon: UserRound,
   },
   {
     name: "Quiz Management",
@@ -86,6 +92,11 @@ const employeeMenuItems = [
     icon: LayoutDashboard,
   },
   {
+    name: "My Profile",
+    path: "/profile",
+    icon: UserRound,
+  },
+  {
     name: "Quizzes",
     path: "/quiz",
     icon: Target,
@@ -112,7 +123,7 @@ const employeeMenuItems = [
   },
   {
     name: "My Recommendations",
-    path: "/my/recommendations",
+    path: "/recommendations",
     icon: FileText,
   },
   {

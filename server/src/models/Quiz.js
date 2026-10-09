@@ -17,6 +17,11 @@ const quizSchema = new mongoose.Schema({
 
   duration: Number,
 
+  dueDate: {
+    type: Date,
+    required: true,
+  },
+
   targetDepartments: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",

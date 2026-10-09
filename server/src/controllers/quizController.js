@@ -12,6 +12,7 @@ const allowedFields = [
 	"category",
 	"difficulty",
 	"duration",
+	"dueDate",
 	"targetUsers",
 	"targetDepartments",
 	"targetAll",
@@ -54,6 +55,17 @@ const validateQuizInput = (body, requireTitle = false) => {
 		input.duration = body.duration;
 	}
 
+	if (requireTitle || body.dueDate !== undefined) {
+		if (typeof body.dueDate !== "string" || !body.dueDate.trim()) {
+			return null;
+		}
+		const dueDate = new Date(body.dueDate);
+		if (!Number.isFinite(dueDate.getTime()) || (requireTitle && dueDate <= new Date())) {
+			return null;
+		}
+		input.dueDate = dueDate;
+	}
+
 	if (body.targetUsers !== undefined) {
 		if (!Array.isArray(body.targetUsers) || !body.targetUsers.every((id) => mongoose.Types.ObjectId.isValid(id))) {
 			return null;
@@ -89,7 +101,34 @@ exports.getQuizzes = async (req, res, next) => {
 					{ targetDepartments: req.user.departmentId },
 				],
 			};
-		const quizzes = await Quiz.find(query).sort({ createdAt: -1 });
+		let quizzes = await Quiz.find(query).sort({ createdAt: -1 }).lean();
+		if (req.user.role === "admin" && quizzes.length) {
+			const [employees, results] = await Promise.all([
+				User.find({ role: "employee" }).select("_id departmentId").lean(),
+				QuizResult.find({ quizId: { $in: quizzes.map((quiz) => quiz._id) } })
+					.select("quizId userId")
+					.lean(),
+			]);
+			const attemptsByQuiz = new Map();
+			results.forEach((result) => {
+				const quizId = String(result.quizId);
+				const attempted = attemptsByQuiz.get(quizId) || new Set();
+				attempted.add(String(result.userId));
+				attemptsByQuiz.set(quizId, attempted);
+			});
+			quizzes = quizzes.map((quiz) => {
+				const assignedEmployees = employees.filter((employee) =>
+					quiz.targetAll ||
+					quiz.targetUsers?.some((targetId) => String(targetId) === String(employee._id)) ||
+					quiz.targetDepartments?.some((targetId) => String(targetId) === String(employee.departmentId))
+				);
+				const attempted = attemptsByQuiz.get(String(quiz._id)) || new Set();
+				return {
+					...quiz,
+					outstandingCount: assignedEmployees.filter((employee) => !attempted.has(String(employee._id))).length,
+				};
+			});
+		}
 
 		res.status(200).json({
 			success: true,
@@ -128,7 +167,7 @@ exports.createQuiz = async (req, res, next) => {
 		if (!input || (!input.targetAll && !input.targetUsers?.length && !input.targetDepartments?.length)) {
 			return res.status(400).json({
 				success: false,
-				message: "Quiz input and at least one assignment target are required.",
+				message: "Valid quiz details, a future deadline, and at least one assignment target are required.",
 			});
 		}
 

@@ -25,6 +25,7 @@ import Leaderboard from "../pages/Leaderboard";
 import Recommendations from "../pages/Recommendations";
 import Reports from "../pages/Reports";
 import Risk from "../pages/Risk";
+import Profile from "../pages/Profile";
 
 const getStoredUser = () => {
   try {
@@ -73,6 +74,9 @@ const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/my/recommendations" element={<Navigate to="/recommendations" replace />} />
           <Route element={<RoleRoute roles={["admin"]} />}>
             <Route path="/dashboard" element={<AdminDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
@@ -91,10 +95,6 @@ const AppRoutes = () => {
             <Route path="/analytics" element={<AnalyticsDashboard />} />
             <Route path="/employee-progress" element={<EmployeeProgress />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route
-              path="/recommendations"
-              element={<Recommendations />}
-            />
             <Route
               path="/notifications"
               element={<NotificationInbox />}
@@ -126,10 +126,6 @@ const AppRoutes = () => {
             <Route path="/training/quiz" element={<Quiz />} />
             <Route path="/phishing" element={<Phishing />} />
             <Route path="/risk" element={<Risk />} />
-            <Route
-              path="/my/recommendations"
-              element={<Recommendations />}
-            />
             <Route
               path="/my/notifications"
               element={<NotificationInbox />}

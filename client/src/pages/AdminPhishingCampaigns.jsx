@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ChevronDown, Rocket } from "lucide-react";
 import {
   createCampaign,
@@ -12,13 +13,16 @@ const getErrorMessage = (error, fallback) =>
   error.response?.data?.message || fallback;
 
 const AdminPhishingCampaigns = () => {
+  const [searchParams] = useSearchParams();
+  const targetEmployeeId = searchParams.get("employeeId");
+  const targetDepartmentId = searchParams.get("departmentId");
   const [campaigns, setCampaigns] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
-  const [assignmentMode, setAssignmentMode] = useState("employees");
-  const [selectedEmployees, setSelectedEmployees] = useState([]);
-  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [assignmentMode, setAssignmentMode] = useState(() => targetDepartmentId ? "department" : "employees");
+  const [selectedEmployees, setSelectedEmployees] = useState(() => targetEmployeeId ? [targetEmployeeId] : []);
+  const [selectedDepartment, setSelectedDepartment] = useState(() => targetDepartmentId || "");
   const [form, setForm] = useState({ title: "", emailSubject: "", emailTemplate: "", senderName: "IT Support" });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

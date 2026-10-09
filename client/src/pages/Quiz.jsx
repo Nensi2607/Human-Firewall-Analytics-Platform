@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getAllQuizzes,
+  getQuizDetails,
   getQuizQuestions,
   submitQuizResult,
 } from "../services/quizService";
@@ -26,6 +27,7 @@ function Quiz() {
   const navigate = useNavigate();
 
   const [availableQuizzes, setAvailableQuizzes] = useState([]);
+  const [quizDetails, setQuizDetails] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -69,10 +71,16 @@ function Quiz() {
       setError("");
 
       try {
-        const data = await getQuizQuestions(quizId);
+        const [data, details] = await Promise.all([
+          getQuizQuestions(quizId),
+          getQuizDetails(quizId),
+        ]);
 
         if (areValidQuizQuestions(data)) {
-          if (isActive) setQuestions(data);
+          if (isActive) {
+            setQuestions(data);
+            setQuizDetails(details);
+          }
         } else {
           if (isActive) {
             setError(
@@ -209,6 +217,7 @@ function Quiz() {
                 <div className="quiz-list-content">
                   <h2>{quiz.title}</h2>
                   <p>{quiz.description || "Security awareness assessment"}</p>
+                  <p>Due {quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : "Deadline unavailable"}</p>
                   <span>
                     {[quiz.category, quiz.difficulty, quiz.duration ? `${quiz.duration} min` : ""].filter(Boolean).join(" · ")}
                   </span>
@@ -266,6 +275,8 @@ function Quiz() {
         <div className="quiz-result-card">
           <p className="section-kicker">Assessment complete</p>
           <h1>Quiz completed</h1>
+          {submittedResult?.submittedLate && <p role="status" className="quiz-result-message">Late submission recorded.</p>}
+          {quizDetails?.dueDate && <p className="quiz-result-message">Deadline: {new Date(quizDetails.dueDate).toLocaleString()}</p>}
 
           <div className="quiz-result-summary">
             <div>
@@ -315,7 +326,8 @@ function Quiz() {
       <div className="quiz-question-card">
         <header className="quiz-header small-header">
           <p className="section-kicker">Security quiz</p>
-          <h1>Cyber Security Awareness Quiz</h1>
+          <h1>{quizDetails?.title || "Cyber Security Awareness Quiz"}</h1>
+          {quizDetails?.dueDate && <p>Deadline: {new Date(quizDetails.dueDate).toLocaleString()}</p>}
         </header>
 
         <div className="quiz-progress-wrap">

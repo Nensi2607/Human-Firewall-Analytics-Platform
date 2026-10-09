@@ -8,6 +8,8 @@ const PhishingAttempt = require("../models/PhishingAttempt");
 const PhishingAwarenessResult = require("../models/PhishingAwarenessResult");
 const RiskAssessment = require("../models/RiskAssessment");
 const AIPrediction = require("../models/AIPrediction");
+const PhishingCampaign = require("../models/PhishingCampaign");
+const Notification = require("../models/Notification");
 const { buildEmployeeDetail } = require("../services/employeeDetailService");
 
 // ==========================================
@@ -325,5 +327,109 @@ exports.deleteUser = async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+};
+
+exports.updateMyProfile = async (req, res, next) => {
+  try {
+    const allowedFields = ["firstName", "lastName", "designation", "profileImage"];
+    const body = req.body;
+    if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length === 0 ||
+      Object.keys(body).some((field) => !allowedFields.includes(field))) {
+      return res.status(400).json({ success: false, message: "Only first name, last name, designation, and profile image may be updated." });
+    }
+
+    const input = {};
+    for (const field of ["firstName", "lastName", "designation"]) {
+      if (body[field] === undefined) continue;
+      if (typeof body[field] !== "string") {
+        return res.status(400).json({ success: false, message: `Invalid ${field}.` });
+      }
+      const value = body[field].trim();
+      const maxLength = field === "designation" ? 120 : 80;
+      if ((field !== "designation" && !value) || value.length > maxLength) {
+        return res.status(400).json({ success: false, message: `Invalid ${field}.` });
+      }
+      input[field] = value;
+    }
+
+    if (body.profileImage !== undefined) {
+      if (typeof body.profileImage !== "string" || body.profileImage.trim().length > 2048) {
+        return res.status(400).json({ success: false, message: "Profile image must be a valid HTTP(S) URL or empty." });
+      }
+      const profileImage = body.profileImage.trim();
+      if (profileImage) {
+        try {
+          const imageUrl = new URL(profileImage);
+          if (!["http:", "https:"].includes(imageUrl.protocol) || imageUrl.username || imageUrl.password) throw new Error("Invalid URL");
+        } catch {
+          return res.status(400).json({ success: false, message: "Profile image must be a valid HTTP(S) URL or empty." });
+        }
+      }
+      input.profileImage = profileImage;
+    }
+
+    if (!Object.keys(input).length) {
+      return res.status(400).json({ success: false, message: "No editable profile fields were provided." });
+    }
+    const user = await User.findByIdAndUpdate(req.user._id, input, { new: true, runValidators: true })
+      .select("firstName lastName email role departmentId designation profileImage status createdAt")
+      .populate("departmentId", "departmentName");
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    return res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.changeMyPassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body || {};
+    if (Object.keys(req.body || {}).some((field) => !["currentPassword", "newPassword", "confirmPassword"].includes(field))) {
+      return res.status(400).json({ success: false, message: "Only password fields are accepted." });
+    }
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string" || typeof confirmPassword !== "string") {
+      return res.status(400).json({ success: false, message: "Current, new, and confirmed passwords are required." });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "New password and confirmation do not match." });
+    }
+    if (newPassword.length < 12 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      return res.status(400).json({ success: false, message: "New password must be at least 12 characters and include uppercase, lowercase, number, and symbol characters." });
+    }
+
+    const user = await User.findById(req.user._id).select("+passwordHash");
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    if (!(await user.comparePassword(currentPassword))) {
+      return res.status(400).json({ success: false, message: "Current password is incorrect." });
+    }
+    if (await user.comparePassword(newPassword)) {
+      return res.status(400).json({ success: false, message: "Choose a password different from your current password." });
+    }
+
+    user.passwordHash = newPassword;
+    await user.save();
+    return res.status(200).json({ success: true, message: "Password changed successfully." });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.getMyAdminSummary = async (req, res, next) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Administrator access is required." });
+    }
+    const [totalEmployees, activeCampaigns, unreadNotifications] = await Promise.all([
+      User.countDocuments({ role: "employee" }),
+      PhishingCampaign.countDocuments({ status: "running" }),
+      Notification.countDocuments({ userId: req.user._id, isRead: false }),
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: { totalEmployees, activeCampaigns, unreadNotifications },
+    });
+  } catch (error) {
+    return next(error);
   }
 };

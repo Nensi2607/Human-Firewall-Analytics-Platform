@@ -10,6 +10,11 @@ export const createQuiz = async (quiz) => {
   return response.data;
 };
 
+export const updateQuiz = async (quizId, quiz) => {
+  const response = await api.put(`/quizzes/${quizId}`, quiz);
+  return response.data;
+};
+
 export const deleteQuiz = async (quizId) => {
   const response = await api.delete(`/quizzes/${quizId}`);
   return response.data;

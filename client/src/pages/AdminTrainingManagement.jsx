@@ -13,6 +13,8 @@ const initialForm = {
   type: "article",
   resourceURL: "",
   duration: "",
+  difficulty: "Beginner",
+  estimatedMinutes: "",
 };
 
 const AdminTrainingManagement = () => {
@@ -49,6 +51,7 @@ const AdminTrainingManagement = () => {
       const payload = {
         ...form,
         duration: form.duration ? Number(form.duration) : undefined,
+        estimatedMinutes: form.estimatedMinutes ? Number(form.estimatedMinutes) : undefined,
       };
       if (editingId) {
         await updateTraining(editingId, payload);
@@ -76,6 +79,8 @@ const AdminTrainingManagement = () => {
       type: training.type || "article",
       resourceURL: training.resourceURL || "",
       duration: training.duration || "",
+      difficulty: training.difficulty || "Beginner",
+      estimatedMinutes: training.estimatedMinutes || "",
     });
     setError("");
     setMessage("");
@@ -137,6 +142,18 @@ const AdminTrainingManagement = () => {
             </select>
           </label>
           <label className="admin-form-field">
+            <span>Difficulty</span>
+            <select value={form.difficulty} onChange={(event) => setForm({ ...form, difficulty: event.target.value })} className="admin-select-field">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </label>
+          <label className="admin-form-field">
+            <span>Estimated learning time (minutes)</span>
+            <input type="number" min="1" step="1" value={form.estimatedMinutes} onChange={(event) => setForm({ ...form, estimatedMinutes: event.target.value })} />
+          </label>
+          <label className="admin-form-field">
             <span>Duration (minutes)</span>
             <input type="number" min="1" step="1" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} />
           </label>
@@ -160,7 +177,12 @@ const AdminTrainingManagement = () => {
                   <th>Title</th>
                   <th>Type</th>
                   <th>Category</th>
-                  <th>Duration</th>
+                  <th>Difficulty</th>
+                  <th>Lessons</th>
+                  <th>Estimated</th>
+                  <th>Not started</th>
+                  <th>In progress</th>
+                  <th>Completed</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -170,7 +192,12 @@ const AdminTrainingManagement = () => {
                     <td className="admin-training-title-cell">{training.title}</td>
                     <td>{training.type || "-"}</td>
                     <td>{training.category || "-"}</td>
-                    <td>{training.duration ? `${training.duration} min` : "-"}</td>
+                    <td>{training.difficulty || "Beginner"}</td>
+                    <td>{training.lessons?.length || 0}</td>
+                    <td>{training.estimatedMinutes ? `${training.estimatedMinutes} min` : training.duration ? `${training.duration} min` : "-"}</td>
+                    <td>{training.progressSummary?.notStarted ?? "-"}</td>
+                    <td>{training.progressSummary?.inProgress ?? "-"}</td>
+                    <td>{training.progressSummary?.completed ?? "-"}</td>
                     <td>
                       <div className="admin-table-actions">
                         <button type="button" onClick={() => handleEdit(training)} className="admin-link-button">Edit</button>

@@ -16,7 +16,42 @@ const trainingProgressSchema = new mongoose.Schema({
 
   completed: Boolean,
 
-  completedAt: Date
+  completedAt: Date,
+
+  openedLessons: {
+    type: [Number],
+    default: [],
+  },
+
+  completedLessons: {
+    type: [Number],
+    default: [],
+  },
+
+  knowledgeCheckAttempts: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+
+  knowledgeCheckScore: Number,
+
+  knowledgeCheckPassed: {
+    type: Boolean,
+    default: false,
+  },
+
+  knowledgeCheckCompletedAt: Date,
+
+  lastActivityAt: Date,
+
+  legacyProgressValue: Number,
+
+  legacyCompletedValue: Boolean,
+
+  legacyCompletedAt: Date,
+
+  legacyCapturedAt: Date,
 
 }, { timestamps: true });
 

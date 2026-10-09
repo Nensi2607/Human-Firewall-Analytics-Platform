@@ -43,6 +43,7 @@ const Navbar = () => {
     "/my/notifications": "My Notifications",
     "/reports": "Reports",
     "/leaderboard": "Learning Leaderboard",
+    "/profile": "My Profile",
   }[pathname] || "Human Firewall Analytics Platform";
 
   useEffect(() => {
@@ -83,13 +84,16 @@ const Navbar = () => {
           {unreadCount > 0 && <span className="notification-count">{unreadCount > 99 ? "99+" : unreadCount}</span>}
         </button>
 
-        <div className="profile-pill">
-          <div className="profile-avatar">{initials}</div>
+        <button type="button" className="profile-pill" aria-label="Open my profile" title="Open my profile" onClick={() => navigate("/profile")}>
+          <div className="profile-avatar">
+            <span>{initials}</span>
+            {currentUser?.profileImage && <img src={currentUser.profileImage} alt="" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.style.display = "none"; }} />}
+          </div>
           <div className="profile-meta">
             <h3>{fullName}</h3>
             <p>{role}</p>
           </div>
-        </div>
+        </button>
       </div>
     </header>
   );

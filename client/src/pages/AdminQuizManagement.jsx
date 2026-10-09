@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Trash2 } from "lucide-react";
 import {
   createQuestion,
@@ -7,6 +8,7 @@ import {
   deleteQuiz,
   getAdminQuizzes,
   getQuizQuestions,
+  updateQuiz,
   updateQuestion as saveQuestionUpdate,
 } from "../services/adminQuizService";
 import { getDepartments, getEmployees } from "../services/adminDirectoryService";
@@ -36,7 +38,18 @@ const getAssignedEmployeeCount = (quiz, employees) => {
   return selectedUsers.size;
 };
 
+const toDateTimeLocal = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 16);
+};
+
 const AdminQuizManagement = () => {
+  const [searchParams] = useSearchParams();
+  const targetEmployeeId = searchParams.get("employeeId");
+  const targetCategory = searchParams.get("category") || "";
   const [quizzes, setQuizzes] = useState([]);
   const [questionCounts, setQuestionCounts] = useState({});
   const [employees, setEmployees] = useState([]);
@@ -47,13 +60,15 @@ const AdminQuizManagement = () => {
     const [questionEditor, setQuestionEditor] = useState(newQuestion());
     const [editingQuestionId, setEditingQuestionId] = useState("");
   const [assignmentMode, setAssignmentMode] = useState("employees");
-  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [selectedEmployees, setSelectedEmployees] = useState(() => targetEmployeeId ? [targetEmployeeId] : []);
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [form, setForm] = useState({ title: "", description: "" });
+  const [form, setForm] = useState({ title: "", description: "", category: targetCategory, dueDate: "" });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
     const [savingQuestion, setSavingQuestion] = useState(false);
     const [deletingQuizId, setDeletingQuizId] = useState("");
+    const [editingDeadlineId, setEditingDeadlineId] = useState("");
+    const [deadlineValue, setDeadlineValue] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -213,8 +228,26 @@ const AdminQuizManagement = () => {
     }
   };
 
+  const handleSaveDeadline = async (quiz) => {
+    if (!deadlineValue || !Number.isFinite(new Date(deadlineValue).getTime())) {
+      setError("Choose a valid quiz deadline.");
+      return;
+    }
+    setError("");
+    try {
+      const response = await updateQuiz(quiz._id, { dueDate: new Date(deadlineValue).toISOString() });
+      setQuizzes((current) => current.map((item) => item._id === quiz._id ? { ...item, ...response.data } : item));
+      setEditingDeadlineId("");
+      setDeadlineValue("");
+      setMessage("Quiz deadline updated.");
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "Unable to update quiz deadline."));
+    }
+  };
+
   const validate = () => {
     if (!form.title.trim()) return "Quiz title is required.";
+    if (!form.dueDate || new Date(form.dueDate) <= new Date()) return "Choose a deadline in the future.";
     if (assignmentMode === "employees" && selectedEmployees.length === 0) {
       return "Select at least one employee.";
     }
@@ -248,6 +281,8 @@ const AdminQuizManagement = () => {
       const quizResponse = await createQuiz({
         title: form.title.trim(),
         description: form.description.trim(),
+        category: form.category.trim(),
+        dueDate: new Date(form.dueDate).toISOString(),
         targetUsers: assignmentMode === "employees" ? selectedEmployees : [],
         targetDepartments: assignmentMode === "department" ? [selectedDepartment] : [],
         targetAll: false,
@@ -259,7 +294,7 @@ const AdminQuizManagement = () => {
         correctAnswer: item.correctAnswer.trim(),
       })));
       setMessage("Quiz and all questions were created successfully.");
-      setForm({ title: "", description: "" });
+      setForm({ title: "", description: "", category: "", dueDate: "" });
       setQuestions([newQuestion()]);
       setSelectedEmployees([]);
       setSelectedDepartment("");
@@ -291,6 +326,14 @@ const AdminQuizManagement = () => {
           <label className="admin-form-field admin-form-field-full">
             <span>Description</span>
             <textarea rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+          </label>
+          <label className="admin-form-field">
+            <span>Topic / category</span>
+            <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
+          </label>
+          <label className="admin-form-field">
+            <span>Deadline</span>
+            <input type="datetime-local" required value={form.dueDate} onChange={(event) => setForm({ ...form, dueDate: event.target.value })} />
           </label>
         </div>
 
@@ -344,7 +387,47 @@ const AdminQuizManagement = () => {
 
       <section className="admin-card admin-table-card">
         <h2 className="admin-section-title">Existing quizzes</h2>
-        {loading ? <p className="admin-empty-text mt-4">Loading quizzes...</p> : quizzes.length === 0 ? <p className="admin-empty-text mt-4">No quizzes have been created yet.</p> : <div className="admin-table-wrap"><table className="admin-quiz-table"><thead><tr><th>Title</th><th>Questions</th><th>Assigned employees</th><th>Created</th><th>Actions</th></tr></thead><tbody>{quizzes.map((quiz) => <tr key={quiz._id}><td className="admin-quiz-title-cell">{quiz.title}</td><td>{questionCounts[quiz._id] ?? "-"}</td><td>{getAssignedEmployeeCount(quiz, employees)}</td><td>{quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString() : "-"}</td><td><div className="admin-table-actions"><button type="button" onClick={() => handleManageQuestions(quiz)} className="admin-link-button">Questions</button><button type="button" disabled={deletingQuizId === quiz._id} onClick={() => handleDeleteQuiz(quiz)} className="admin-link-button admin-link-button-danger">{deletingQuizId === quiz._id ? "Deleting..." : "Delete"}</button></div></td></tr>)}</tbody></table></div>}
+        {loading ? <p className="admin-empty-text mt-4">Loading quizzes...</p> : quizzes.length === 0 ? <p className="admin-empty-text mt-4">No quizzes have been created yet.</p> : (
+          <div className="admin-table-wrap">
+            <table className="admin-quiz-table">
+              <thead><tr><th>Title</th><th>Questions</th><th>Assigned employees</th><th>Deadline</th><th>Created</th><th>Actions</th></tr></thead>
+              <tbody>
+                {quizzes.map((quiz) => {
+                  const isOverdue = quiz.dueDate && new Date(quiz.dueDate) < new Date() && quiz.outstandingCount > 0;
+                  return (
+                    <tr key={quiz._id}>
+                      <td className="admin-quiz-title-cell">{quiz.title}</td>
+                      <td>{questionCounts[quiz._id] ?? "-"}</td>
+                      <td>{getAssignedEmployeeCount(quiz, employees)}</td>
+                      <td>
+                        {editingDeadlineId === quiz._id ? (
+                          <div className="admin-table-actions">
+                            <input aria-label={`Deadline for ${quiz.title}`} type="datetime-local" value={deadlineValue} onChange={(event) => setDeadlineValue(event.target.value)} />
+                            <button type="button" onClick={() => handleSaveDeadline(quiz)} className="admin-link-button">Save</button>
+                          </div>
+                        ) : (
+                          <>{quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : "No deadline"}{isOverdue && <span className="ml-2 rounded bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Overdue</span>}</>
+                        )}
+                      </td>
+                      <td>{quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString() : "-"}</td>
+                      <td>
+                        <div className="admin-table-actions">
+                          {editingDeadlineId === quiz._id ? (
+                            <button type="button" onClick={() => { setEditingDeadlineId(""); setDeadlineValue(""); }} className="admin-link-button">Cancel</button>
+                          ) : (
+                            <button type="button" onClick={() => { setEditingDeadlineId(quiz._id); setDeadlineValue(toDateTimeLocal(quiz.dueDate)); }} className="admin-link-button">Edit deadline</button>
+                          )}
+                          <button type="button" onClick={() => handleManageQuestions(quiz)} className="admin-link-button">Questions</button>
+                          <button type="button" disabled={deletingQuizId === quiz._id} onClick={() => handleDeleteQuiz(quiz)} className="admin-link-button admin-link-button-danger">{deletingQuizId === quiz._id ? "Deleting..." : "Delete"}</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {managingQuiz && (

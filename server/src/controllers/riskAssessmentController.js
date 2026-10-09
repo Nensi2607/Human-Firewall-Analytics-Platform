@@ -1,6 +1,6 @@
 const RiskAssessment = require("../models/RiskAssessment");
 const { calculateRiskAssessment } = require("../services/riskAssessmentService");
-const { generateRecommendations } = require("../services/recommendationService");
+const { getEmployeeRecommendations } = require("../services/recommendationService");
 const { createUserNotification } = require("../services/notificationService");
 const { generatePredictionForUser } = require("../services/predictionService");
 
@@ -42,7 +42,7 @@ exports.calculateCurrentRiskAssessment = async (req, res, next) => {
 			});
 		}
 		const recommendations = assessment
-			? await generateRecommendations(req.user._id, assessment.finalRiskScore)
+			? await getEmployeeRecommendations(req.user)
 			: [];
 		let prediction = null;
 		if (assessment) {
